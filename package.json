@@ -5,8 +5,13 @@
   "main": "index.js",
   "author": "flyc",
   "license": "MIT",
+  "scripts": {
+    "dev": "node --experimental-modules index.mjs"
+  },
   "dependencies": {
-    "axios": "^0.18.0"
+    "axios": "^0.18.0",
+    "babel-preset-es2015": "^6.24.1",
+    "cheerio": "^1.0.0-rc.2"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
