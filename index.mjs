@@ -16,5 +16,5 @@ import cheerio from 'cheerio';
         return [error]
     });
 
-    console.log(array);
+    console.log('done');
 })();
