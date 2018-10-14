@@ -1,0 +1,11 @@
+{
+  "name": "pixiv-wanderer",
+  "version": "1.0.0",
+  "description": "another testing, another trying",
+  "main": "index.js",
+  "author": "flyc",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.18.0"
+  }
+}
