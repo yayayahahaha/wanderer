@@ -7,7 +7,8 @@ import request from 'request';
 
 var baseUrl = 'https://www.pixiv.net/search.php?s_mode=s_tag&word=',
     keyword = 'kill la kill',
-    url = encodeURI(`${baseUrl}${keyword}`);
+    url = encodeURI(`${baseUrl}${keyword}`),
+    likedLevel = 50;
 
 getSearchPage(url);
 // getSingleImage('https://i.pximg.net/img-master/img/2015/07/11/15/56/58/51359343_p0_master1200.jpg');
@@ -45,6 +46,7 @@ async function getSearchPage(url) {
     var $ = cheerio.load(data),
         totalCount = parseInt($('.count-badge').text(), 10);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件`);
+    console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 }
 
 // TODO:
