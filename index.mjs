@@ -18,8 +18,10 @@ getSearchPage(url);
 // https://www.pixiv.net/member_illust.php?mode=medium&illust_id=44690099
 
 async function getSearchPage(url) {
-    console.log(url);
-
+    console.log('');
+    console.log(`欲查詢的關鍵字是: ${keyword}`);
+    console.log(`實際搜尋的網址: ${url}`);
+    console.log('開始搜尋..');
     // url = 'https://i.pximg.net/img-master/img/2014/07/13/20/39/04/44690099_p0_master1200.jpg';
 
     var [data, error] = await axios({
@@ -39,10 +41,10 @@ async function getSearchPage(url) {
         console.log(error.response.statusText);
         return;
     }
-    console.log('過了!');
-    var $ = cheerio.load(data);
-    console.log($('.count-badge').text());
-    return;
+    console.log('');
+    var $ = cheerio.load(data),
+        totalCount = parseInt($('.count-badge').text(), 10);
+    console.log(`搜尋結束, 總筆數有 ${totalCount} 件`);
 }
 
 // TODO:
