@@ -6,9 +6,10 @@ import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import request from 'request';
 
 var url = 'https://www.pixiv.net/search.php?s_mode=s_tag&word=',
-    keyword = 'kill%20la%20kill';
+    keyword = 'kill la kill';
 
 url = `${url}${keyword}`;
+url = encodeURI(url);
 
 getSearchPage(url);
 // getSingleImage('https://i.pximg.net/img-master/img/2015/07/11/15/56/58/51359343_p0_master1200.jpg');
@@ -21,13 +22,13 @@ getSearchPage(url);
 async function getSearchPage(url) {
     console.log(url);
 
-    url = 'https://i.pximg.net/img-master/img/2014/07/13/20/39/04/44690099_p0_master1200.jpg';
+    // url = 'https://i.pximg.net/img-master/img/2014/07/13/20/39/04/44690099_p0_master1200.jpg';
 
     var [data, error] = await axios({
         method: 'get',
         url: url,
         headers: {
-            // 'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5'
+            'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5'
             // referer: 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=44690099'
         }
     }).then(({ data }) => {
@@ -41,9 +42,9 @@ async function getSearchPage(url) {
         return;
     }
     console.log('過了!');
-    return;
     var $ = cheerio.load(data);
     console.log($('.count-badge').text());
+    return;
 }
 
 // TODO:
