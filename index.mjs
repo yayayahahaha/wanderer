@@ -61,10 +61,6 @@ async function getSearchPage(url) {
         totalCount = parseInt($('.count-badge').text(), 10);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件`);
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
-
-    var searchHeader = {
-
-    }
 }
 
 // TODO:
