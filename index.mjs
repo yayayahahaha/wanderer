@@ -5,26 +5,19 @@ import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import request from 'request';
 
+var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
+
 // var keyword = 'kill la kill',
 var keyword = 'darling in the franxx',
-    page = 100,
+    page = 1,
     totalPages = null,
     totalCount = null,
     likedLevel = 50;
 
 var getSearchHeader = function() {
         return {
-            // accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            // 'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5',
-            cookie: 'PHPSESSID=35210002_3f5f551db1e08d29d3c4dd07f6469308;'
-            // referer: 'https://www.pixiv.net/search.php?s_mode=s_tag&word=darling%20in%20the%20franxx',
-            // 'upgrade-insecure-requests': 1
-        };
-
-        // this is not enough anymore..
-        return {
-            'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5'
+            cookie: `PHPSESSID=${currentSESSID};`
         };
     },
     getSinegleHeader = function(createrID) {
@@ -73,8 +66,14 @@ async function firstSearch(url) {
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`); // !! 與實際頁面數不符，沒有登入好像只有 10 頁
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 
+    var images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
+    images = images.filter((illust, index) => {
+        return illust.bookmarkCount >= likedLevel;
+    });
+    console.log(images.length);
+
     // 用來測試實際取到的結果
-    // fs.writeFileSync('result', data);
+    fs.writeFileSync('result', data);
 }
 
 // TODO:
