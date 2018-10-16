@@ -7,6 +7,8 @@ import request from 'request';
 
 var keyword = 'kill la kill',
     page = 1,
+    totalPages = null,
+    totalCount = null,
     likedLevel = 50;
 
 var getSearchHeader = function() {
@@ -51,10 +53,13 @@ async function firstSearch(url) {
         console.log(error.response.statusText);
         return;
     }
+
     console.log('');
-    var $ = cheerio.load(data),
-        totalCount = parseInt($('.count-badge').text(), 10);
-    console.log(`搜尋結束, 總筆數有 ${totalCount} 件`);
+    var $ = cheerio.load(data);
+
+    totalCount = parseInt($('.count-badge').text(), 10);
+    totalPages = Math.ceil(totalCount / 40);
+    console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`); // !! 與實際頁面數不符，沒有登入好像只有 10 頁
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 }
 
