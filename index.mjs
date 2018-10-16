@@ -10,6 +10,21 @@ var baseUrl = 'https://www.pixiv.net/search.php?s_mode=s_tag&word=',
     url = encodeURI(`${baseUrl}${keyword}`),
     likedLevel = 50;
 
+var getSearchHeader = function() {
+        return {
+            'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5'
+        };
+    },
+    getSinegleHeader = function(createrID) {
+        if (!createrID) {
+            console.log('請務必輸入該作者的ID');
+            return {};
+        }
+        return {
+            referer: `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${createrID}`
+        };
+    }
+
 getSearchPage(url);
 // getSingleImage('https://i.pximg.net/img-master/img/2015/07/11/15/56/58/51359343_p0_master1200.jpg');
 
@@ -28,11 +43,10 @@ async function getSearchPage(url) {
     var [data, error] = await axios({
         method: 'get',
         url: url,
-        headers: {
-            'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5'
-            // referer: 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=44690099'
-        }
-    }).then(({ data }) => {
+        headers: getSearchHeader()
+    }).then(({
+        data
+    }) => {
         return [data, null];
     }).catch((error) => {
         return [null, error];
@@ -47,6 +61,10 @@ async function getSearchPage(url) {
         totalCount = parseInt($('.count-badge').text(), 10);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件`);
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
+
+    var searchHeader = {
+
+    }
 }
 
 // TODO:
