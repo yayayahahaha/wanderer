@@ -5,11 +5,9 @@ import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import request from 'request';
 
-var url = 'https://www.pixiv.net/search.php?s_mode=s_tag&word=',
-    keyword = 'kill la kill';
-
-url = `${url}${keyword}`;
-url = encodeURI(url);
+var baseUrl = 'https://www.pixiv.net/search.php?s_mode=s_tag&word=',
+    keyword = 'kill la kill',
+    url = encodeURI(`${baseUrl}${keyword}`);
 
 getSearchPage(url);
 // getSingleImage('https://i.pximg.net/img-master/img/2015/07/11/15/56/58/51359343_p0_master1200.jpg');
