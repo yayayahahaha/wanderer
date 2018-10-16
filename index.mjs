@@ -5,9 +5,8 @@ import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import request from 'request';
 
-var baseUrl = 'https://www.pixiv.net/search.php?s_mode=s_tag&word=',
-    keyword = 'kill la kill',
-    url = encodeURI(`${baseUrl}${keyword}`),
+var keyword = 'kill la kill',
+    page = 1,
     likedLevel = 50;
 
 var getSearchHeader = function() {
@@ -23,22 +22,18 @@ var getSearchHeader = function() {
         return {
             referer: `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${createrID}`
         };
+    },
+    getSearchUrl = function(keyword, page) {
+        return encodeURI(`https://www.pixiv.net/search.php?word=${keyword}&order=date_d&p=${page}`);
     }
 
-getSearchPage(url);
-// getSingleImage('https://i.pximg.net/img-master/img/2015/07/11/15/56/58/51359343_p0_master1200.jpg');
+firstSearch(getSearchUrl(keyword, page));
 
-// url
-// https://i.pximg.net/img-master/img/2014/07/13/20/39/04/44690099_p0_master1200.jpg
-// referer
-// https://www.pixiv.net/member_illust.php?mode=medium&illust_id=44690099
-
-async function getSearchPage(url) {
+async function firstSearch(url) {
     console.log('');
     console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
     console.log('開始搜尋..');
-    // url = 'https://i.pximg.net/img-master/img/2014/07/13/20/39/04/44690099_p0_master1200.jpg';
 
     var [data, error] = await axios({
         method: 'get',
