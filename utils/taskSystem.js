@@ -1,51 +1,62 @@
-function TaskSystem(sequenceNumber) {
-    this.sequence = sequenceNumber;
-    this.doPromise = async () => {
-        var promise = null,
-            promiseReault = null,
-            lastOne = false;
+function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback = Function.prototype) {
+    var self = this;
+    self.jobsArray = jobsArray;
+    self.resultArray = resultArray;
+    self.callback = callback;
+    self.taskNumber = taskNumber;
 
-        if (this.__proto__.sourceArray.length === 0) {
-            console.log('工作完成!');
-            delete this.__proto__.taskListObject[this.sequence];
+    self.taskListObject = {};
+    self.sequenceCounter = 0;
+    self.totalJobsNumber = self.jobsArray.length;
 
-            if (Object.keys(this.__proto__.taskListObject).length === 0) {
-                this.__proto__.callback(this.__proto__.returnResult);
-            }
-            return; // 這裡是return
-        }
-
-        // 從sourceArray 裡取出promise function
-        promise = this.__proto__.sourceArray.splice(0, 1)[0];
-
-        // 執行或直接賦值
-        promiseReault = typeof promise === 'function' ? await promise() : promise;
-
-        // 推進結果裡
-        this.__proto__.returnResult.push(promiseReault);
-
-        console.log(this.__proto__.sourceArray);
-
-        if (lastOne) {
-            this.__proto__.callback(this.__proto__.returnResult);
-        }
-
-        // 再來一次
-        this.doPromise();
+    for (var i = 0; i < jobsArray.length; i++) {
+        jobsArray[i]
     }
 
-    // 首次直接執行
-    this.doPromise();
+    function _Task(sequenceNumber) {
+        this.sequence = sequenceNumber;
+        this.doPromise = async () => {
+            var promise = null,
+                promiseReault = null,
+                lastOne = false;
+
+            if (this.__proto__.jobsArray.length === 0) {
+                console.log('工作完成!');
+                delete this.__proto__.taskListObject[this.sequence];
+
+                if (Object.keys(this.__proto__.taskListObject).length === 0) {
+                    this.__proto__.callback(this.__proto__.returnResult);
+                }
+                return; // 這裡是return
+            }
+
+            // 從jobsArray 裡取出promise function
+            promise = this.__proto__.jobsArray.splice(0, 1)[0];
+
+            // 執行或直接賦值
+            promiseReault = typeof promise === 'function' ? await promise() : promise;
+
+            // 推進結果裡
+            this.__proto__.returnResult.push(promiseReault);
+
+            console.log(this.__proto__.jobsArray);
+
+            if (lastOne) {
+                this.__proto__.callback(this.__proto__.returnResult);
+            }
+
+            // 再來一次
+            this.doPromise();
+        }
+
+        // 首次直接執行
+        this.doPromise();
+    }
 }
-TaskSystem.prototype.sourceArray = [];
-TaskSystem.prototype.returnResult = [];
-TaskSystem.prototype.taskListObject = {};
-TaskSystem.prototype.callback = Function.prototype;
-TaskSystem.prototype.sequenceCounter = 0;
 
-TaskSystem.prototype.init = function(sourceArray = [], returnResult = [], taskNumber = 8, callback = Function.prototype) {
+TaskSystem.prototype.init = function(jobsArray = [], returnResult = [], taskNumber = 8, callback = Function.prototype) {
 
-    TaskSystem.prototype.sourceArray = sourceArray.slice();
+    TaskSystem.prototype.jobsArray = jobsArray.slice();
     TaskSystem.prototype.returnResult = returnResult;
     TaskSystem.prototype.callback = callback;
 
