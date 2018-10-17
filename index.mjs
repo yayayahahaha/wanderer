@@ -72,8 +72,6 @@ var keyword = 'darling in the franxx',
     totalCount = null,
     likedLevel = 50;
 
-
-
 var getSearchHeader = function() {
         return {
             'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5',

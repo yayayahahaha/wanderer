@@ -1,3 +1,6 @@
+// TODO:
+// 每一個Jobs 完成時的callback, 可以透過setting 設定目前傳入的jobsArray 裡面是有參數的Object 還是直接執行的function
+
 function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback = Function.prototype, setting = {}) {
     this.jobsArray = jobsArray.slice(); // 任務列表
     this.resultArray = resultArray; // 回傳列表，任務結果會append 在後面
