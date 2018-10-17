@@ -58,8 +58,8 @@ var task1 = new TaskSystem([function() {
     });
 }, 9], [], 2);
 (async function() {
+    return;
     var a = await task1.doPromise();
-    console.log(a);
 })();
 
 
@@ -91,8 +91,7 @@ var getSearchHeader = function() {
         return encodeURI(`https://www.pixiv.net/search.php?word=${keyword}&order=date_d&p=${page}`);
     };
 
-// 先把taskSystem 做完再說
-// firstSearch(getSearchUrl(keyword, page));
+firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
     console.log('');
@@ -129,7 +128,33 @@ async function firstSearch(url) {
     images = images.filter((illust, index) => {
         return illust.bookmarkCount >= likedLevel;
     });
-    console.log(images.length);
+
+    var functionArray = [];
+    for (var i = 0; i < images.length; i++) {
+        var img = images[i];
+
+        // 會有function 的值吃到重複的問題
+        functionArray.push(function() {
+            return new Promise((resolve, reject) => {
+                axios({
+                    method: 'get',
+                    url: img.url,
+                    data: {
+                        key: "value"
+                    },
+                    headers: getSinegleHeader(img.userId)
+                }).then(() => {
+                    resolve(`${ img.illustTitle } success!`);
+                }).catch(() => {
+                    reject(`${ img.illustTitle } failed!!!`);
+                })
+            })
+        });
+    }
+
+    var task_search = new TaskSystem(functionArray);
+    var aaa = await task_search.doPromise();
+    console.log(aaa);
 
     // 用來測試實際取到的結果
     fs.writeFileSync('result', data);
