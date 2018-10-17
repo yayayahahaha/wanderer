@@ -8,8 +8,6 @@ import {
     TaskSystem
 } from './utils/TaskSystem';
 
-console.log(TaskSystem);
-
 var task1 = new TaskSystem([function() {
     return new Promise((resolve, reject) => {
         setTimeout(function() {
