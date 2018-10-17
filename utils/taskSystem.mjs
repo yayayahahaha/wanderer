@@ -24,6 +24,8 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
             // 檢查現在還有沒有沒停止的task
             if (this.workingTasksNumber === 0) {
                 this.callback(this.resultArray);
+
+                // doPromise 的resolve
                 resolve(this.resultArray);
             }
             return;
