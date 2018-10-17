@@ -1,5 +1,6 @@
 // TODO:
 // 每一個Jobs 完成時的callback, 可以透過setting 設定目前傳入的jobsArray 裡面是有參數的Object 還是直接執行的function
+// 當前的這個taskSystem 執行的時候是mute 的還是verbose 的
 
 function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback = Function.prototype, setting = {}) {
     this.jobsArray = jobsArray.slice(); // 任務列表
