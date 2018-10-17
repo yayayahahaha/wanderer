@@ -11,54 +11,54 @@ import {
 console.log(TaskSystem);
 
 var task1 = new TaskSystem([function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
-            resolve('1-1-1-1-1-1-1-1');
+            reject('1-1-1-1-1-1-1-1');
         }, 100 * 1 * 3);
     });
 }, function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
             resolve('2-2-2-2-2-2-2-2');
         }, 100 * 2 * 3);
     });
 }, function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
             resolve('3-3-3-3-3-3-3-3');
         }, 100 * 3 * 3);
     });
 }, function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
             resolve('4-4-4-4-4-4-4-4');
         }, 100 * 4 * 3);
     });
 }, function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
             resolve('5-5-5-5-5-5-5-5');
         }, 100 * 5 * 3);
     });
 }, function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
             resolve('6-6-6-6-6-6-6-6');
         }, 100 * 6 * 3);
     });
 }, function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
             resolve('7-7-7-7-7-7-7-7');
         }, 100 * 7 * 3);
     });
 }, function() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(function() {
             resolve('8-8-8-8-8-8-8-8');
         }, 100 * 8 * 3);
     });
-}, 9], [], 5);
+}, 9], [], 2);
 (async function() {
     var a = await task1.doPromise();
     console.log(a);

@@ -7,6 +7,7 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
     this.workingTasksNumber = 0;
     this.sequenceCounter = 0;
     this.totalJobsNumber = this.jobsArray.length;
+    this.finishedJobs = 0;
 
     this._doJobs = async function(resolve) {
         var job = null,
@@ -16,10 +17,7 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
         if (this.jobsArray.length === 0) {
             this.workingTasksNumber--;
 
-            console.log(`還剩下 ${ this.workingTasksNumber } 個task 還在執行`);
-
             if (this.workingTasksNumber === 0) {
-                console.log('全部都結束囉!');
                 this.callback(this.resultArray);
                 resolve(this.resultArray);
             }
@@ -29,7 +27,30 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
 
         job = this.jobsArray.splice(0, 1)[0];
 
-        jobReault = typeof job === 'function' ? await job() : job;
+        jobReault = typeof job === 'function' ? await job().then((response) => {
+            return {
+                status: 1,
+                data: response
+            };
+        }).catch((error) => {
+            return {
+                status: 0,
+                data: error
+            };
+        }) : {
+            status: 1,
+            data: job
+        };
+
+        var status = jobReault.status ? 'success' : 'failed',
+            of = `${ this.finishedJobs } / ${ this.totalJobsNumber }`,
+            persent = parseInt(this.finishedJobs, 10) * 100 / parseInt(this.totalJobsNumber, 10);
+
+            persent = Math.round(persent * Math.pow(10, 2)) / 100;
+            persent = `${ persent.toFixed(2) }%`;
+
+        this.finishedJobs++;
+        console.log(`${of}, ${persent}, ${status}`);
 
         this.resultArray.push(jobReault);
 
@@ -38,12 +59,14 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
 
     this.doPromise = () => {
         return new Promise((resolve, reject) => {
-            if (jobsArray.length === 0) {
+            if (this.jobsArray.length === 0) {
                 console.log('warning: 傳入的jobs 陣列為空');
                 resolve(this.resultArray);
                 return;
             }
 
+            console.log(`要執行的任務共有 ${ this.jobsArray.length } 個`);
+            console.log(`分給 ${ this.taskNumber } 個task 去執行`);
             this.workingTasksNumber = this.taskNumber;
             for (var i = 0; i < this.taskNumber; i++) {
                 this._doJobs(resolve);
