@@ -6,7 +6,7 @@ import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import request from 'request';
 import {
     TaskSystem
-} from './utils/TaskSystem';
+} from './flyc-lib/utils/TaskSystem';
 
 var task1 = new TaskSystem([function() {
     return new Promise((resolve, reject) => {
