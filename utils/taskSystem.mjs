@@ -86,7 +86,6 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
             }
         })
     }
-    // this.doPromise();
 }
 
 export {
