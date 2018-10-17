@@ -4,6 +4,69 @@ import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import request from 'request';
+import { TaskSystem } from './utils/TaskSystem';
+
+console.log(TaskSystem);
+
+TaskSystem.prototype.init([function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('0-0-0-0-0-0-0-0-0');
+        }, 100 * 0 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('1-1-1-1-1-1-1-1-1');
+        }, 100 * 1 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('2-2-2-2-2-2-2-2-2');
+        }, 100 * 2 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('3-3-3-3-3-3-3-3-3');
+        }, 100 * 3 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('4-4-4-4-4-4-4-4-4');
+        }, 100 * 4 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('5-5-5-5-5-5-5-5-5');
+        }, 100 * 5 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('6-6-6-6-6-6-6-6-6');
+        }, 100 * 6 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('7-7-7-7-7-7-7-7-7');
+        }, 100 * 7 * 2);
+    });
+}, function() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('8-8-8-8-8-8-8-8-8');
+        }, 100 * 8 * 2);
+    });
+}, 9], [], 4, function(result) {
+    console.log('來自callback');
+    console.log(result);
+});
+
 
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
@@ -14,64 +77,7 @@ var keyword = 'darling in the franxx',
     totalCount = null,
     likedLevel = 50;
 
-function TaskSystem(sequenceNumber) {
-    this.sequence = sequenceNumber;
-    this.doPromise = async () => {
-        var promise = null,
-            promiseReault = null,
-            lastOne = false;
 
-        if (this.__proto__.sourceArray.length === 0) {
-            console.log('工作完成!');
-            delete this.__proto__.taskListObject[this.sequence];
-
-            if (Object.keys(this.__proto__.taskListObject).length === 0) {
-                this.__proto__.callback(this.__proto__.returnResult);
-            }
-            return; // 這裡是return
-        }
-
-        // 從sourceArray 裡取出promise function
-        promise = this.__proto__.sourceArray.splice(0, 1)[0];
-
-        // 執行或直接賦值
-        promiseReault = typeof promise === 'function' ? await promise() : promise;
-
-        // 推進結果裡
-        this.__proto__.returnResult.push(promiseReault);
-
-        console.log(this.__proto__.sourceArray);
-
-        if (lastOne) {
-            this.__proto__.callback(this.__proto__.returnResult);
-        }
-
-        // 再來一次
-        this.doPromise();
-    }
-
-    // 首次直接執行
-    this.doPromise();
-}
-TaskSystem.prototype.sourceArray = [];
-TaskSystem.prototype.returnResult = [];
-TaskSystem.prototype.taskListObject = {};
-TaskSystem.prototype.callback = Function.prototype;
-TaskSystem.prototype.sequenceCounter = 0;
-
-TaskSystem.prototype.init = function(sourceArray = [], returnResult = [], taskNumber = 8, callback = Function.prototype) {
-
-    TaskSystem.prototype.sourceArray = sourceArray.slice();
-    TaskSystem.prototype.returnResult = returnResult;
-    TaskSystem.prototype.callback = callback;
-
-    for (var i = 0; i < taskNumber; i++) {
-        TaskSystem.prototype.sequenceCounter++;
-        var sequence = `Task-System-${TaskSystem.prototype.sequenceCounter}`; // 製作流水號
-
-        TaskSystem.prototype.taskListObject[sequence] = new TaskSystem(sequence);
-    }
-}
 
 var getSearchHeader = function() {
         return {
