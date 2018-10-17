@@ -14,19 +14,21 @@ var keyword = 'darling in the franxx',
     totalCount = null,
     likedLevel = 50;
 
-function TaskSystem() {
+function TaskSystem(sequenceNumber) {
+    this.sequence = sequenceNumber;
     this.doPromise = async () => {
         var promise = null,
             promiseReault = null,
             lastOne = false;
 
-        switch (this.__proto__.sourceArray.length) {
-            case 0:
-                console.log('工作完成!');
-                return; // 這裡是return
-            case 1:
-                lastOne = true;
-                break;
+        if (this.__proto__.sourceArray.length === 0) {
+            console.log('工作完成!');
+            delete this.__proto__.taskListObject[this.sequence];
+
+            if (Object.keys(this.__proto__.taskListObject).length === 0) {
+                this.__proto__.callback(this.__proto__.returnResult);
+            }
+            return; // 這裡是return
         }
 
         // 從sourceArray 裡取出promise function
@@ -53,15 +55,21 @@ function TaskSystem() {
 }
 TaskSystem.prototype.sourceArray = [];
 TaskSystem.prototype.returnResult = [];
-TaskSystem.prototype.taskList = [];
+TaskSystem.prototype.taskListObject = {};
 TaskSystem.prototype.callback = Function.prototype;
+TaskSystem.prototype.sequenceCounter = 0;
+
 TaskSystem.prototype.init = function(sourceArray = [], returnResult = [], taskNumber = 8, callback = Function.prototype) {
+
     TaskSystem.prototype.sourceArray = sourceArray.slice();
     TaskSystem.prototype.returnResult = returnResult;
     TaskSystem.prototype.callback = callback;
 
     for (var i = 0; i < taskNumber; i++) {
-        TaskSystem.prototype.taskList.push(new TaskSystem());
+        TaskSystem.prototype.sequenceCounter++;
+        var sequence = `Task-System-${TaskSystem.prototype.sequenceCounter}`; // 製作流水號
+
+        TaskSystem.prototype.taskListObject[sequence] = new TaskSystem(sequence);
     }
 }
 
@@ -84,7 +92,8 @@ var getSearchHeader = function() {
         return encodeURI(`https://www.pixiv.net/search.php?word=${keyword}&order=date_d&p=${page}`);
     };
 
-firstSearch(getSearchUrl(keyword, page));
+// 先把taskSystem 做完再說
+// firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
     console.log('');
@@ -122,65 +131,6 @@ async function firstSearch(url) {
         return illust.bookmarkCount >= likedLevel;
     });
     console.log(images.length);
-
-    TaskSystem.prototype.init([function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('0-0-0-0-0-0-0-0-0');
-            }, 100 * 0 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('1-1-1-1-1-1-1-1-1');
-            }, 100 * 1 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('2-2-2-2-2-2-2-2-2');
-            }, 100 * 2 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('3-3-3-3-3-3-3-3-3');
-            }, 100 * 3 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('4-4-4-4-4-4-4-4-4');
-            }, 100 * 4 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('5-5-5-5-5-5-5-5-5');
-            }, 100 * 5 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('6-6-6-6-6-6-6-6-6');
-            }, 100 * 6 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('7-7-7-7-7-7-7-7-7');
-            }, 100 * 7 * 2);
-        });
-    }, function() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('8-8-8-8-8-8-8-8-8');
-            }, 100 * 8 * 2);
-        });
-    }, 9], [], 4, function(result) {
-        console.log('來自callback');
-        console.log(result);
-    });
 
     // 用來測試實際取到的結果
     fs.writeFileSync('result', data);
