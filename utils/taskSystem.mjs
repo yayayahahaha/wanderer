@@ -30,16 +30,19 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
         jobReault = typeof job === 'function' ? await job().then((response) => {
             return {
                 status: 1,
-                data: response
+                data: response,
+                meta: job
             };
         }).catch((error) => {
             return {
                 status: 0,
-                data: error
+                data: error,
+                meta: job
             };
         }) : {
             status: 1,
-            data: job
+            data: job,
+            meta: job
         };
 
         var status = jobReault.status ? 'success' : 'failed',
