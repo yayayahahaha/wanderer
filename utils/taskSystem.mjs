@@ -1,5 +1,5 @@
-function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback = Function.prototype) {
-    this.jobsArray = jobsArray;
+function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback = Function.prototype, setting = {}) {
+    this.jobsArray = jobsArray.slice();
     this.resultArray = resultArray;
     this.callback = callback;
     this.taskNumber = taskNumber;
@@ -8,16 +8,22 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
     this.sequenceCounter = 0;
     this.totalJobsNumber = this.jobsArray.length;
 
-    this.doJobs = async function(resolve) {
+    this._doJobs = async function(resolve) {
         var job = null,
             jobReault = null,
             lastOne = false;
 
         if (this.jobsArray.length === 0) {
-            console.log('工作結束!');
             this.workingTasksNumber--;
 
-            console.log(`還剩下${this.workingTasksNumber}個task 還在執行`);
+            console.log(`還剩下 ${ this.workingTasksNumber } 個task 還在執行`);
+
+            if (this.workingTasksNumber === 0) {
+                console.log('全部都結束囉!');
+                this.callback(this.resultArray);
+                resolve(this.resultArray);
+            }
+
             return;
         }
 
@@ -27,18 +33,24 @@ function TaskSystem(jobsArray = [], resultArray = [], taskNumber = 5, callback =
 
         this.resultArray.push(jobReault);
 
-        this.doJobs(resolve);
+        this._doJobs(resolve);
     }
 
-    this._doPromise = () => {
+    this.doPromise = () => {
         return new Promise((resolve, reject) => {
-            for (var i = 0; i < jobsArray.length; i++) {
-                this.workingTasksNumber++;
-                this.doJobs(resolve);
+            if (jobsArray.length === 0) {
+                console.log('warning: 傳入的jobs 陣列為空');
+                resolve(this.resultArray);
+                return;
+            }
+
+            this.workingTasksNumber = this.taskNumber;
+            for (var i = 0; i < this.taskNumber; i++) {
+                this._doJobs(resolve);
             }
         })
     }
-    this._doPromise();
+    // this.doPromise();
 }
 
 export {

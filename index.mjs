@@ -4,68 +4,65 @@ import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import request from 'request';
-import { TaskSystem } from './utils/TaskSystem';
+import {
+    TaskSystem
+} from './utils/TaskSystem';
 
 console.log(TaskSystem);
 
-TaskSystem.prototype.init([function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('0-0-0-0-0-0-0-0-0');
-        }, 100 * 0 * 2);
+var task1 = new TaskSystem([function() {
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('1-1-1-1-1-1-1-1');
+        }, 100 * 1 * 3);
     });
 }, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('1-1-1-1-1-1-1-1-1');
-        }, 100 * 1 * 2);
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('2-2-2-2-2-2-2-2');
+        }, 100 * 2 * 3);
     });
 }, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('2-2-2-2-2-2-2-2-2');
-        }, 100 * 2 * 2);
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('3-3-3-3-3-3-3-3');
+        }, 100 * 3 * 3);
     });
 }, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('3-3-3-3-3-3-3-3-3');
-        }, 100 * 3 * 2);
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('4-4-4-4-4-4-4-4');
+        }, 100 * 4 * 3);
     });
 }, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('4-4-4-4-4-4-4-4-4');
-        }, 100 * 4 * 2);
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('5-5-5-5-5-5-5-5');
+        }, 100 * 5 * 3);
     });
 }, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('5-5-5-5-5-5-5-5-5');
-        }, 100 * 5 * 2);
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('6-6-6-6-6-6-6-6');
+        }, 100 * 6 * 3);
     });
 }, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('6-6-6-6-6-6-6-6-6');
-        }, 100 * 6 * 2);
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('7-7-7-7-7-7-7-7');
+        }, 100 * 7 * 3);
     });
 }, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('7-7-7-7-7-7-7-7-7');
-        }, 100 * 7 * 2);
+    return new Promise((resolve) => {
+        setTimeout(function() {
+            resolve('8-8-8-8-8-8-8-8');
+        }, 100 * 8 * 3);
     });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('8-8-8-8-8-8-8-8-8');
-        }, 100 * 8 * 2);
-    });
-}, 9], [], 4, function(result) {
-    console.log('來自callback');
-    console.log(result);
-});
+}, 9], [], 5);
+(async function() {
+    var a = await task1.doPromise();
+    console.log(a);
+})();
 
 
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
