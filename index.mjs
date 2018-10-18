@@ -9,11 +9,7 @@ import {
 } from './flyc-lib/utils/TaskSystem';
 
 var task1 = new TaskSystem([function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            reject('1-1-1-1-1-1-1-1');
-        }, 100 * 1 * 3);
-    });
+    return '1-1-1-1-1-1-1-1';
 }, function() {
     return new Promise((resolve, reject) => {
         setTimeout(function() {
@@ -58,6 +54,7 @@ var task1 = new TaskSystem([function() {
     });
 }, 9], [], 2);
 (async function() {
+    return;
     var a = await task1.doPromise();
     console.log(a);
 })();
@@ -70,7 +67,9 @@ var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 50;
+    likedLevel = 50,
+    ORIGINAL_RESULT_FILE_NAME = null,
+    cacheDirectory = {};
 
 var getSearchHeader = function() {
         return {
@@ -89,16 +88,40 @@ var getSearchHeader = function() {
     },
     getSearchUrl = function(keyword, page) {
         return encodeURI(`https://www.pixiv.net/search.php?word=${keyword}&order=date_d&p=${page}`);
+    },
+    getCacheFileName = function(keyword = 'pixiv', likedLevel = 50, jsonEnd = false) {
+        var base = `${ keyword.replace(/ /g, '_') } - ${ likedLevel }`;
+        return jsonEnd ? `${ base }.json` : base;
     };
 
-// 先把taskSystem 做完再說
+// 檢查cacheDirectory.json 是否存在
+if (!fs.existsSync('cacheDirectory.json')) {
+    fs.writeFileSync(cacheDirectory.json, JSON.stringify({}));
+} else {
+    var contents = fs.readFileSync('cacheDirectory.json'),
+        json = JSON.parse(contents);
+    console.log(json);
+}
+
 // firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
+    // 為了避免pixiv 負擔過重
+    // 先檢查有沒有快取 && 強制更新
+    // 部份更新什麼的再說
+    if (true) {
+        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`),
+            json = JSON.parse(content);
+        console.log(json.length);
+        return;
+    }
     console.log('');
     console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
     console.log('開始搜尋..');
+
+    // 快取檔檔名
+    ORIGINAL_RESULT_FILE_NAME = getCacheFileName(keyword, likedLevel, true);
 
     var [data, error] = await axios({
         method: 'get',
@@ -125,14 +148,54 @@ async function firstSearch(url) {
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`); // !! 與實際頁面數不符，沒有登入好像只有 10 頁
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 
-    var images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
-    images = images.filter((illust, index) => {
-        return illust.bookmarkCount >= likedLevel;
-    });
-    console.log(images.length);
+    var taskArray = [];
+    for (var i = 0; i < totalPages; i++) {
+        taskArray.push(_createReturnFunction(i));
+    }
 
+    function _createReturnFunction(number) {
+        var url = getSearchUrl(keyword, number);
+        return function() {
+            return axios({
+                method: 'get',
+                url: url,
+                headers: getSearchHeader()
+            }).then(({
+                data
+            }) => {
+                var $ = cheerio.load(data),
+                    images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
+                images = images.filter((illust, index) => {
+                    return illust.bookmarkCount >= likedLevel;
+                });
+                return images;
+            }).catch((error) => {
+                return error;
+            });
+        }
+    }
+
+    var task_search = new TaskSystem(taskArray, [], 16);
+    var allPagesImagesObject = await task_search.doPromise();
+    console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesObject));
+
+    // 開始過濾
+    formatAllPagesImagesObject(allPagesImagesObject);
+
+    return;
     // 用來測試實際取到的結果
     fs.writeFileSync('result', data);
+}
+function formatAllPagesImagesObject(allPagesImagesObject) {
+    allPagesImagesObject = allPagesImagesObject.filter((imageObject, index) => {
+        return !!imageObject.status;
+    }).map((imageObject) => {
+        return imageObject.data;
+    });
+
+
+    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
 }
 
 // TODO:
