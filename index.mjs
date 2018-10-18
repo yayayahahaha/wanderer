@@ -67,7 +67,7 @@ var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 10;
+    likedLevel = 50;
 
 var getSearchHeader = function() {
         return {
