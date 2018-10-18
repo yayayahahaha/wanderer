@@ -87,18 +87,31 @@ var getSearchHeader = function() {
     },
     getSearchUrl = function(keyword, page) {
         return encodeURI(`https://www.pixiv.net/search.php?word=${keyword}&order=date_d&p=${page}`);
-    };
+    },
+    getCacheFileName = function(keyword = 'pixiv', likedLevel = 50, jsonEnd = false) {
+        var base = `${ keyword.replace(/ /g, '_') } - ${ likedLevel }`;
+        return jsonEnd ? `${ base }.json` : base;
+    }
 
 firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
+    // 為了避免pixiv 負擔過重
+    // 先檢查有沒有快取 && 強制更新
+    // 部份更新什麼的再說
+    if (true) {
+        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`),
+            json = JSON.parse(content);
+        console.log(json.length);
+        return;
+    }
     console.log('');
     console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
     console.log('開始搜尋..');
 
     // 快取檔檔名
-    ORIGINAL_RESULT_FILE_NAME = `${ keyword.replace(/ /g, '_') } - ${ likedLevel }.json`;
+    ORIGINAL_RESULT_FILE_NAME = getCacheFileName(keyword, likedLevel, true);
 
     var [data, error] = await axios({
         method: 'get',
@@ -155,7 +168,7 @@ async function firstSearch(url) {
     var task_search = new TaskSystem(taskArray, [], 16);
     var allPagesImagesObject = await task_search.doPromise();
     console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
-    fs.writeFileSync(ORIGINAL_RESULT_FILE_NAME, JSON.stringify(allPagesImagesObject));
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesObject));
 
     // 開始過濾
     formatAllPagesImagesObject(allPagesImagesObject);
