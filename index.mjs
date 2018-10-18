@@ -9,11 +9,7 @@ import {
 } from './flyc-lib/utils/TaskSystem';
 
 var task1 = new TaskSystem([function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            reject('1-1-1-1-1-1-1-1');
-        }, 100 * 1 * 3);
-    });
+    return '1-1-1-1-1-1-1-1';
 }, function() {
     return new Promise((resolve, reject) => {
         setTimeout(function() {
@@ -60,6 +56,7 @@ var task1 = new TaskSystem([function() {
 (async function() {
     return;
     var a = await task1.doPromise();
+    console.log(a);
 })();
 
 
@@ -70,7 +67,7 @@ var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 50;
+    likedLevel = 10;
 
 var getSearchHeader = function() {
         return {
@@ -124,37 +121,38 @@ async function firstSearch(url) {
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`); // !! 與實際頁面數不符，沒有登入好像只有 10 頁
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 
-    var images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
-    images = images.filter((illust, index) => {
-        return illust.bookmarkCount >= likedLevel;
-    });
-
-    var functionArray = [];
-    for (var i = 0; i < images.length; i++) {
-        var img = images[i];
-
-        // 會有function 的值吃到重複的問題
-        functionArray.push(function() {
-            return new Promise((resolve, reject) => {
-                axios({
-                    method: 'get',
-                    url: img.url,
-                    data: {
-                        key: "value"
-                    },
-                    headers: getSinegleHeader(img.userId)
-                }).then(() => {
-                    resolve(`${ img.illustTitle } success!`);
-                }).catch(() => {
-                    reject(`${ img.illustTitle } failed!!!`);
-                })
-            })
-        });
+    var taskArray = [];
+    for (var i = 0; i < totalPages; i++) {
+        taskArray.push(_createReturnFunction(i));
     }
 
-    var task_search = new TaskSystem(functionArray);
-    var aaa = await task_search.doPromise();
-    console.log(aaa);
+    function _createReturnFunction(number) {
+        var url = getSearchUrl(keyword, number);
+        return function() {
+            return axios({
+                method: 'get',
+                url: url,
+                headers: getSearchHeader()
+            }).then(({
+                data
+            }) => {
+                var $ = cheerio.load(data),
+                    images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
+                images = images.filter((illust, index) => {
+                    return illust.bookmarkCount >= likedLevel;
+                });
+                return images;
+            }).catch((error) => {
+                return error;
+            });
+        }
+    }
+
+    var task_search = new TaskSystem(taskArray, [], 8);
+    var result = await task_search.doPromise();
+    // console.log(JSON.stringify(result));
+    fs.writeFileSync('result.json', JSON.stringify(result));
+    return;
 
     // 用來測試實際取到的結果
     fs.writeFileSync('result', data);
