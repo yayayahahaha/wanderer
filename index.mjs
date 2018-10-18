@@ -91,7 +91,9 @@ var getSearchHeader = function() {
     getCacheFileName = function(keyword = 'pixiv', likedLevel = 50, jsonEnd = false) {
         var base = `${ keyword.replace(/ /g, '_') } - ${ likedLevel }`;
         return jsonEnd ? `${ base }.json` : base;
-    }
+    };
+
+
 
 firstSearch(getSearchUrl(keyword, page));
 
