@@ -67,7 +67,8 @@ var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 50;
+    likedLevel = 50,
+    ORIGINAL_RESULT_FILE_NAME = null;
 
 var getSearchHeader = function() {
         return {
@@ -95,6 +96,9 @@ async function firstSearch(url) {
     console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
     console.log('開始搜尋..');
+
+    // 快取檔檔名
+    ORIGINAL_RESULT_FILE_NAME = `${ keyword.replace(/ /g, '_') } - ${ likedLevel }.json`;
 
     var [data, error] = await axios({
         method: 'get',
@@ -150,12 +154,14 @@ async function firstSearch(url) {
 
     var task_search = new TaskSystem(taskArray, [], 16);
     var allPagesImagesObject = await task_search.doPromise();
+    console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
+    fs.writeFileSync(ORIGINAL_RESULT_FILE_NAME, JSON.stringify(allPagesImagesObject));
+
     allPagesImagesObject = allPagesImagesObject.filter((imageObject, index) => {
         return !!imageObject.status;
     }).map((imageObject) => {
         return imageObject.data;
     });
-    console.log(allPagesImagesObject);
     fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
     return;
 
