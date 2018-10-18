@@ -68,7 +68,8 @@ var keyword = 'darling in the franxx',
     totalPages = null,
     totalCount = null,
     likedLevel = 50,
-    ORIGINAL_RESULT_FILE_NAME = null;
+    ORIGINAL_RESULT_FILE_NAME = null,
+    cacheDirectory = {};
 
 var getSearchHeader = function() {
         return {
@@ -93,9 +94,16 @@ var getSearchHeader = function() {
         return jsonEnd ? `${ base }.json` : base;
     };
 
+// 檢查cacheDirectory.json 是否存在
+if (!fs.existsSync('cacheDirectory.json')) {
+    fs.writeFileSync(cacheDirectory.json, JSON.stringify({}));
+} else {
+    var contents = fs.readFileSync('cacheDirectory.json'),
+        json = JSON.parse(contents);
+    console.log(json);
+}
 
-
-firstSearch(getSearchUrl(keyword, page));
+// firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
     // 為了避免pixiv 負擔過重
