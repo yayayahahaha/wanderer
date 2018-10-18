@@ -157,16 +157,22 @@ async function firstSearch(url) {
     console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
     fs.writeFileSync(ORIGINAL_RESULT_FILE_NAME, JSON.stringify(allPagesImagesObject));
 
+    // 開始過濾
+    formatAllPagesImagesObject(allPagesImagesObject);
+
+    return;
+    // 用來測試實際取到的結果
+    fs.writeFileSync('result', data);
+}
+function formatAllPagesImagesObject(allPagesImagesObject) {
     allPagesImagesObject = allPagesImagesObject.filter((imageObject, index) => {
         return !!imageObject.status;
     }).map((imageObject) => {
         return imageObject.data;
     });
-    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
-    return;
 
-    // 用來測試實際取到的結果
-    fs.writeFileSync('result', data);
+
+    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
 }
 
 // TODO:
