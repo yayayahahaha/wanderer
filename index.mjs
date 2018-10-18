@@ -148,10 +148,15 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, [], 8);
-    var result = await task_search.doPromise();
-    // console.log(JSON.stringify(result));
-    fs.writeFileSync('result.json', JSON.stringify(result));
+    var task_search = new TaskSystem(taskArray, [], 16);
+    var allPagesImagesObject = await task_search.doPromise();
+    allPagesImagesObject = allPagesImagesObject.filter((imageObject, index) => {
+        return !!imageObject.status;
+    }).map((imageObject) => {
+        return imageObject.data;
+    });
+    console.log(allPagesImagesObject);
+    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
     return;
 
     // 用來測試實際取到的結果
