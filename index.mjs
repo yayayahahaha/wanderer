@@ -53,7 +53,14 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 }
 
 // 故事從這裡開始
-firstSearch(getSearchUrl(keyword, page));
+(async () => {
+
+    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
+        { singleArray, multipleArray } = formatAllPagesImagesArray(allPagesImagesArray);
+    console.log(singleArray.length);
+    console.log(multipleArray.length);
+
+})();
 
 async function firstSearch(url) {
     // 為了避免pixiv 負擔過重
@@ -66,8 +73,8 @@ async function firstSearch(url) {
             allPagesImagesArray = JSON.parse(content);
 
         // 開始過濾
-        formatAllPagesImagesArray(allPagesImagesArray);
-        return;
+        // formatAllPagesImagesArray(allPagesImagesArray);
+        return allPagesImagesArray;
     }
 
     console.log('');
@@ -137,11 +144,9 @@ async function firstSearch(url) {
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
     // 開始過濾
-    formatAllPagesImagesArray(allPagesImagesArray);
+    // formatAllPagesImagesArray(allPagesImagesArray);
 
-    return;
-    // 用來測試實際取到的結果
-    fs.writeFileSync('result', data);
+    return allPagesImagesArray;
 }
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
@@ -170,9 +175,25 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         })
         .value(),
         authorsObject = {},
-        authorArray = [];
+        authorArray = [],
+        singleArray = [],
+        multipleArray = [];
 
-    // 依作者分類:
+    [].forEach.call(allImagesArray, (image, index) => {
+        if (parseInt(image.illustType, 10) === 0) {
+            singleArray.push(image);
+        } else if (parseInt(image.illustType, 10) === 1) {
+            multipleArray.push(image);
+        }
+    });
+
+    return {
+        singleArray,
+        multipleArray
+    };
+    // 底下的部分其實可以當做TODO
+
+    // 依作者分類
     for (var i = 0; i < allImagesArray.length; i++) {
         var eachImage = allImagesArray[i];
         if (authorsObject[eachImage.userId]) {
@@ -200,7 +221,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     authorArray.sort((a, b) => {
         return b.totalLikedNumber - a.totalLikedNumber;
     });
-    console.log(authorArray[0].userId);
 
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
