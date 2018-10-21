@@ -60,11 +60,10 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 (async () => {
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
-        return;
     } else {
         var contents = fs.readFileSync('./input.json'),
-            inputJSON = JSON.parse(contents);
-        console.log(inputJSON);
+            json = JSON.parse(contents);
+        console.log(json);
     }
     return;
 
