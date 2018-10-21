@@ -247,9 +247,20 @@ async function fetchSingleImagesUrl(singleArray) {
             }) => {
                 var startIndex = res.indexOf(`${ illustId }: {`),
                     endIndex = res.indexOf('},user:'),
-                    data = res.slice(startIndex + illust_id_length + 2, endIndex);
-                return JSON.parse(data);
+                    data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
+                    returnObject = {
+                        userId: data.userId,
+                        illustId: data.illustId,
+                        illustTitle: data.illustTitle,
+                        illustType: data.illustType,
+                        urls: data.urls,
+                        bookmarkCount: data.bookmarkCount,
+                        tags: data.tags.tags
+                    };
+
+                return returnObject;
             }).catch((error) => {
+                console.log(error);
                 return error;
             })
         }
@@ -260,7 +271,7 @@ async function fetchSingleImagesUrl(singleArray) {
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data,
             singleImageCacheKey = `${ eachImage.userId } - ${ eachImage.illustId }`;
-        cacheDirectory[getCacheFileName(keyword)][singleImageCacheKey] = true;
+        cacheDirectory[getCacheFileName(keyword)][singleImageCacheKey] = eachImage;
     }
 
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
