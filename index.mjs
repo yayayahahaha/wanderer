@@ -11,12 +11,12 @@ import {
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 // var keyword = 'kill la kill',
-// var keyword = 'darling in the franxx',
-var keyword = 'skullgirl',
+// var keyword = 'skullgirl',
+var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 100,
+    likedLevel = 3000,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -64,6 +64,9 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 })();
 
 async function firstSearch(url) {
+    console.log('');
+    console.log(`欲查詢的關鍵字是: ${keyword}`);
+
     // 為了避免pixiv 負擔過重
     // 先檢查有沒有快取 && 強制更新
     // 部份更新什麼的再說
@@ -78,8 +81,6 @@ async function firstSearch(url) {
         return allPagesImagesArray;
     }
 
-    console.log('');
-    console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
     console.log('開始搜尋..');
 
@@ -228,7 +229,7 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
-function fetchSingleImagesUrl(singleArray) {
+async function fetchSingleImagesUrl(singleArray) {
     var taskArray = [];
     for (var i = 0; i < singleArray.length; i++) {
         var eachImage = singleArray[i];
@@ -237,19 +238,20 @@ function fetchSingleImagesUrl(singleArray) {
 
     function _createReturnFunction(illust_id, authorId) {
         var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
+            illustId = illust_id,
             illust_id_length = illust_id.length,
             headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
         return function() {
             return axios({
                 method: 'get',
-                url:  url,
+                url: url,
                 headers: headers
             }).then(({
-                data
+                data: res
             }) => {
-                var startIndex = res.indexOf('68688965: {'),
+                var startIndex = res.indexOf(`${ illustId }: {`),
                     endIndex = res.indexOf('},user:'),
-                    data = res.slice(startIndex + 8 + 2, endIndex);
+                    data = res.slice(startIndex + illust_id_length + 2, endIndex);
                 return data;
             }).catch((error) => {
                 return error;
@@ -257,7 +259,10 @@ function fetchSingleImagesUrl(singleArray) {
         }
     }
 
-    console.log(taskArray[0].toString());
+    var task_SingleArray = new TaskSystem(taskArray, [], 32);
+    var result = await task_SingleArray.doPromise();
+
+    fs.writeFileSync('result.json', JSON.stringify(result));
     return;
 
     var url = 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=68688965';
