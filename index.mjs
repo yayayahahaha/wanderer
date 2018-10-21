@@ -119,9 +119,6 @@ async function firstSearch(url) {
             }) => {
                 var $ = cheerio.load(data),
                     images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
-                images = images.filter((illust, index) => {
-                    return illust.bookmarkCount >= likedLevel;
-                });
                 return images;
             }).catch((error) => {
                 return error;
