@@ -145,23 +145,23 @@ async function firstSearch(url) {
 }
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
-    // 過濾掉失敗的頁數和動圖
-    // 過濾愛心數也在這裡
+    // 過濾掉失敗的頁數
     // !!: 過濾越早越好
+    // 但不知道為什麼總數量比頁面上顯示的要少?
     allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status; // 暫時不處理失敗的部分
     }).map((imageObject) => {
-        return imageObject.data.filter((image) => {
-            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
-        });
+        return imageObject.data; // 讓物件變成裡面的data 陣列
     });
-    // 但不知道為什麼總數量比頁面上顯示的要少?
-
 
     // 壓平所有頁數到同一個陣列
-    // 且，過濾掉因為頁數邊界可能造成的重複資料
+    // 且，過濾掉因為頁數邊界可能造成的重複資料和動圖
+    // 過濾愛心數也在這裡
     var allImagesArray = _.chain(allPagesImagesArray)
         .flattenDepth(1)
+        .filter((image) => {
+            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
+        })
         .uniqBy('illustId')
         .sort((a, b) => {
             return a['bookmarkCount'].toString().localeCompare(b['bookmarkCount'].toString()) ||
