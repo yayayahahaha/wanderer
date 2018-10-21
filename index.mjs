@@ -234,10 +234,11 @@ function fetchSingleImagesUrl() {
         url: url,
         headers: Object.assign(getSinegleHeader(804978), getSearchHeader())
     }).then(({data: res}) => {
-        console.log(res.indexOf('{token:'));
-        // console.log(res);
-        fs.writeFileSync('result.json', res);
-        // var $ = cheerio.load(res);
+        var startIndex = res.indexOf('68688965: {'),
+            endIndex = res.indexOf('},user:'),
+            data = res.slice(startIndex + 8 + 2, endIndex);
+        console.log(JSON.parse(data));
+        fs.writeFileSync('result.json', data);
     }).catch((error) => {
         console.error(error);
         console.log('catch');
