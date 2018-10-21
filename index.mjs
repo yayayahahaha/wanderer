@@ -61,7 +61,7 @@ async function firstSearch(url) {
     if (cacheDirectory[getCacheFileName(keyword, false)]) {
         console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
         console.log(`快取的值為: ${ getCacheFileName(keyword, false) }`);
-        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, true) }`);
+        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, true) }`),
             allPagesImagesArray = JSON.parse(content);
 
         // 開始過濾
