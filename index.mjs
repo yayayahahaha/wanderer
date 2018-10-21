@@ -145,6 +145,7 @@ async function firstSearch(url) {
 }
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
+    // 過濾掉失敗的頁數和動圖
     allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status; // 暫時不處理失敗的部分
     }).map((imageObject) => {
@@ -152,15 +153,13 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
             return parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
         });
     });
+    // 但不知道為什麼總數量比頁面上顯示的要少?
 
-    var allImagesArray = _.flattenDepth(allPagesImagesArray, 1);
+    // 壓平所有頁數到同一個陣列
+    // 且，過濾掉因為頁數邊界可能造成的重複資料
+    var allImagesArray = _.uniqBy(_.flattenDepth(allPagesImagesArray, 1), 'illustId');
     console.log(allImagesArray.length);
 
-    var object = {};
-    for (var i = 0; i < allImagesArray.length; i++) {
-        object[allImagesArray[i].illustId] = true;
-    }
-    console.log(Object.keys(object).length);
 
     // fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
