@@ -100,16 +100,15 @@ if (!fs.existsSync('cacheDirectory.json')) {
 } else {
     var contents = fs.readFileSync('cacheDirectory.json'),
         json = JSON.parse(contents);
-    console.log(json);
 }
 
-// firstSearch(getSearchUrl(keyword, page));
+firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
     // 為了避免pixiv 負擔過重
     // 先檢查有沒有快取 && 強制更新
     // 部份更新什麼的再說
-    if (true) {
+    if (false) {
         var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`),
             json = JSON.parse(content);
         console.log(json.length);
@@ -145,7 +144,7 @@ async function firstSearch(url) {
 
     totalCount = parseInt($('.count-badge').text(), 10);
     totalPages = Math.ceil(totalCount / 40);
-    console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`); // !! 與實際頁面數不符，沒有登入好像只有 10 頁
+    console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`);
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 
     var taskArray = [];
@@ -179,6 +178,10 @@ async function firstSearch(url) {
     var allPagesImagesObject = await task_search.doPromise();
     console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
     fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesObject));
+
+    console.log('將快取資訊寫入cacheDirectory');
+    cacheDirectory[getCacheFileName(keyword, likedLevel, false)] = true;
+    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(JSON.stringify(cacheDirectory)));
 
     // 開始過濾
     formatAllPagesImagesObject(allPagesImagesObject);
