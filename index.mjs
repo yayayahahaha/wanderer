@@ -160,23 +160,26 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         var eachPageImages = allPagesImagesArray[i];
 
         for (var j = 0; j < eachPageImages.length; j++) {
-            var eachImages = eachPageImages[j];
-            allImagesArray.push(Object.assign({}, eachImages));
+            var eachImage = eachPageImages[j];
+            allImagesArray.push(Object.assign({}, eachImage));
         }
     }
     console.log(allImagesArray[0]);
     console.log(allImagesArray.length);
 
-    var typeObject = {};
+    // 依照作者做分類
+    var authorObject = {};
     for (var i = 0; i < allImagesArray.length; i++) {
-        if (allImagesArray[i].illustType == 2) {
-            console.log(allImagesArray[i]);
+        var eachImage = allImagesArray[i];
+        if (typeof authorObject[eachImage.userId] !== 'undefined') {
+            authorObject[eachImage.userId] = authorObject[eachImage.userId].concat(eachImage);
+        } else {
+            authorObject[eachImage.userId] = [eachImage];
         }
-        typeObject[allImagesArray[i].illustType] = true;
     }
-    console.log(Object.keys(typeObject));
+    console.log(Object.keys(authorObject).length);
 
-    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesArray));
+    fs.writeFileSync('result.json', JSON.stringify(authorObject));
 }
 
 // TODO:
