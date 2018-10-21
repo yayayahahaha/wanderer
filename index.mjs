@@ -51,6 +51,7 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     cacheDirectory = json;
 }
 
+// 故事從這裡開始
 firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
