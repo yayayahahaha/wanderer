@@ -61,7 +61,11 @@ if (!fs.existsSync('./cacheDirectory.json')) {
             multipleArray
         } = formatAllPagesImagesArray(allPagesImagesArray);
 
-    fetchSingleImagesUrl(singleArray);
+    if (singleArray.length !== 0) {
+        fetchSingleImagesUrl(singleArray);
+    } else {
+        console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
+    }
 })();
 
 async function firstSearch(url) {
