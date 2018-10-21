@@ -166,7 +166,17 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
                 a['illustId'].toString().localeCompare(b['illustId'].toString());
         })
         .value(),
-        authorsObject = _.keyBy(allImagesArray, 'userId');
+        authorsObject = {};
+
+    // 依作者分類:
+    for (var i = 0; i < allImagesArray.length; i++) {
+        var eachImage = allImagesArray[i];
+        if (authorsObject[eachImage.userId]) {
+            authorsObject[eachImage.userId].push(eachImage);
+        } else {
+            authorsObject[eachImage.userId] = [eachImage];
+        }
+    }
 
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
