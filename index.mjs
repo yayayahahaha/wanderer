@@ -226,17 +226,32 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
 }
 
 async function fetchSingleImagesUrl(singleArray) {
+    console.log('');
+    console.log(`開始取得單一圖檔的各自連結`);
+
     var taskArray = [];
     for (var i = 0; i < singleArray.length; i++) {
         var eachImage = singleArray[i];
         taskArray.push(_createReturnFunction(eachImage.illustId, eachImage.userId));
     }
 
+    function _getSingleCacheKey(authorId, illust_id) {
+        return `${ authorId } - ${ illust_id }`;
+    }
     function _createReturnFunction(illust_id, authorId) {
         var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
             illustId = illust_id,
             illust_id_length = illust_id.length,
             headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
+
+        var cacheObject = cacheDirectory[getCacheFileName(keyword)][_getSingleCacheKey(authorId, illust_id)];
+        if (cacheObject) {
+            console.log(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片將從快取取得`);
+            return function() {
+                return cacheObject;
+            }
+        }
+
         return function() {
             return axios({
                 method: 'get',
@@ -255,9 +270,11 @@ async function fetchSingleImagesUrl(singleArray) {
                         illustType: data.illustType,
                         urls: data.urls,
                         bookmarkCount: data.bookmarkCount,
-                        tags: data.tags.tags
+                        // tags: data.tags.tags,
+                        singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
                     };
 
+                console.log(`call ${ data.userId } - ${ data.illustId }`);
                 return returnObject;
             }).catch((error) => {
                 console.log(error);
@@ -266,13 +283,15 @@ async function fetchSingleImagesUrl(singleArray) {
         }
     }
 
-    var task_SingleArray = new TaskSystem(taskArray, [], 32);
+    console.log('');
+    var task_SingleArray = new TaskSystem(taskArray, [], 4);
     var singleImagesArray = await task_SingleArray.doPromise();
     for (var i = 0; i < singleImagesArray.length; i++) {
-        var eachImage = singleImagesArray[i].data,
-            singleImageCacheKey = `${ eachImage.userId } - ${ eachImage.illustId }`;
-        cacheDirectory[getCacheFileName(keyword)][singleImageCacheKey] = eachImage;
+        var eachImage = singleImagesArray[i].data;
+        cacheDirectory[getCacheFileName(keyword)][eachImage.singleImageCacheKey] = eachImage;
     }
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+
 
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 }
