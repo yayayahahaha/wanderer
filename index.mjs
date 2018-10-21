@@ -259,25 +259,6 @@ async function fetchSingleImagesUrl(singleArray) {
     var result = await task_SingleArray.doPromise();
 
     fs.writeFileSync('result.json', JSON.stringify(result));
-    return;
-
-    var url = 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=68688965';
-    axios({
-        method: 'get',
-        url: `${ url }`,
-        headers: Object.assign(getSinegleHeader(804978), getSearchHeader())
-    }).then(({
-        data: res
-    }) => {
-        var startIndex = res.indexOf('68688965: {'),
-            endIndex = res.indexOf('},user:'),
-            data = res.slice(startIndex + 8 + 2, endIndex);
-        console.log(JSON.parse(data));
-        // fs.writeFileSync('result.json', data);
-    }).catch((error) => {
-        console.error(error);
-        console.log('catch');
-    });
 }
 
 // TODO:
