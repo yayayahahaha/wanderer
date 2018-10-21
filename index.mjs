@@ -11,15 +11,18 @@ import {
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 // var keyword = 'kill la kill',
-// var keyword = 'skullgirl',
-var keyword = 'darling in the franxx',
+// var keyword = 'darling in the franxx',
+var keyword = 'skullgirl',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 10000,
+    likedLevel = 100,
     maxPage = 0,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
+
+var firstSearchTaskNumber = 16,
+    singleArrayTaskNumber = 16;
 
 var getSearchHeader = function() {
         return {
@@ -150,7 +153,7 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, [], 16);
+    var task_search = new TaskSystem(taskArray, [], firstSearchTaskNumber);
     var allPagesImagesArray = await task_search.doPromise();
 
     console.log('');
@@ -311,7 +314,7 @@ async function fetchSingleImagesUrl(singleArray) {
     }
 
     console.log('');
-    var task_SingleArray = new TaskSystem(taskArray, [], 4);
+    var task_SingleArray = new TaskSystem(taskArray, [], singleArrayTaskNumber);
     var singleImagesArray = await task_SingleArray.doPromise();
 
     for (var i = 0; i < singleImagesArray.length; i++) {
