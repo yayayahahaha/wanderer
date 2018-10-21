@@ -204,7 +204,16 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         return imageObject.data;
     });
 
-    console.log(allPagesImagesArray[0]);
+    var allImagesArray = [];
+    for (var i = 0; i < allPagesImagesArray.length; i++) {
+        var eachPageImages = allPagesImagesArray[i];
+        for (var j = 0; j < eachPageImages.length; j++) {
+            var eachImages = eachPageImages[j];
+            allImagesArray.push(Object.assign({}, eachImages));
+        }
+    }
+    console.log(allImagesArray[0]);
+    console.log(allImagesArray.length);
     fs.writeFileSync('result.json', JSON.stringify(allPagesImagesArray));
 }
 
