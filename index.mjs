@@ -229,7 +229,9 @@ async function fetchSingleImagesUrl(singleArray) {
     console.log('');
     console.log(`開始取得單一圖檔的各自連結`);
 
-    var taskArray = [];
+    var taskArray = [],
+        cacheLog = [];
+
     for (var i = 0; i < singleArray.length; i++) {
         var eachImage = singleArray[i];
         taskArray.push(_createReturnFunction(eachImage.illustId, eachImage.userId));
@@ -246,7 +248,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
         var cacheObject = cacheDirectory[getCacheFileName(keyword)][_getSingleCacheKey(authorId, illust_id)];
         if (cacheObject) {
-            console.log(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片將從快取取得`);
+            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片將從快取取得`);
             return function() {
                 return cacheObject;
             }
@@ -283,9 +285,18 @@ async function fetchSingleImagesUrl(singleArray) {
         }
     }
 
+    if (cacheLog.length !== 0) {
+        var cacheLogFileName = `${ getCacheFileName(keyword, false) }.cache.log.json`;
+        console.log(`有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+    }
+
     console.log('');
     var task_SingleArray = new TaskSystem(taskArray, [], 4);
     var singleImagesArray = await task_SingleArray.doPromise();
+
+
+
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data;
         cacheDirectory[getCacheFileName(keyword)][eachImage.singleImageCacheKey] = eachImage;
@@ -297,6 +308,7 @@ async function fetchSingleImagesUrl(singleArray) {
 }
 
 // TODO:
+// mkdir 的錯誤捕捉
 // 透過搜尋的關鍵字的總total 決定爬幾頁後爬完
 // 且，透過標籤上的愛心數決定哪些才要爬
 
