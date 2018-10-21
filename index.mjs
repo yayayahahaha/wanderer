@@ -16,7 +16,7 @@ var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 3000,
+    likedLevel = 5000,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -248,7 +248,7 @@ async function fetchSingleImagesUrl(singleArray) {
                 var startIndex = res.indexOf(`${ illustId }: {`),
                     endIndex = res.indexOf('},user:'),
                     data = res.slice(startIndex + illust_id_length + 2, endIndex);
-                return data;
+                return JSON.parse(data);
             }).catch((error) => {
                 return error;
             })
