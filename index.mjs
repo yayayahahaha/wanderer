@@ -10,9 +10,7 @@ import {
 
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
-// var keyword = 'kill la kill',
-// var keyword = 'darling in the franxx',
-var keyword = 'skullgirl',
+var keyword = '',
     page = 1,
     totalPages = null,
     totalCount = null,
@@ -60,13 +58,20 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 (async () => {
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
-    } else {
-        var contents = fs.readFileSync('./input.json'),
-            json = JSON.parse(contents);
-        console.log(json);
+        return;
     }
-    return;
 
+    var contents = fs.readFileSync('./input.json'),
+        inputJSON = JSON.parse(contents);
+
+    keyword = inputJSON.keyword;
+    likedLevel = inputJSON.likedLevel ? inputJSON.likedLevel : 500;
+    maxPage = inputJSON.maxPage ? inputJSON.maxPage : 0;
+
+    if (!keyword) {
+        console.log('請在 input.json 檔裡輸入關鍵字');
+        return;
+    }
 
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
         {
