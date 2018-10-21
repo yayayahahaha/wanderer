@@ -58,6 +58,17 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
+    if (!fs.existsSync('./input.json')) {
+        console.log('請修改 input.json');
+        return;
+    } else {
+        var contents = fs.readFileSync('./input.json'),
+            inputJSON = JSON.parse(contents);
+        console.log(inputJSON);
+    }
+    return;
+
+
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
         {
             singleArray,

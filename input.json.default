@@ -1,5 +1,5 @@
 {
-    keyword: '',
-    likedLevel: 500,
-    maxPage: 0
+    "keyword": '',
+    "likedLevel": 500,
+    "maxPage": 0
 }
