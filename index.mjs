@@ -157,7 +157,7 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
 
     // 壓平所有頁數到同一個陣列
     // 且，過濾掉因為頁數邊界可能造成的重複資料
-    var allImagesArray = _.uniqBy(_.flattenDepth(allPagesImagesArray, 1), 'illustId');
+    var allImagesArray = _.chain(allPagesImagesArray).flattenDepth(1).uniqBy('illustId').value();
     console.log(allImagesArray.length);
 
 
