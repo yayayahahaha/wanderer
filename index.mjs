@@ -3,7 +3,7 @@
 import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
-import request from 'request';
+import _ from 'lodash';
 import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
@@ -11,11 +11,12 @@ import {
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 // var keyword = 'kill la kill',
-var keyword = 'darling in the franxx',
+// var keyword = 'darling in the franxx',
+var keyword = 'skullgirl',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 1000,
+    likedLevel = 100,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -144,32 +145,66 @@ async function firstSearch(url) {
 }
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
+    // 過濾掉失敗的頁數
+    // !!: 過濾越早越好
+    // 但不知道為什麼總數量比頁面上顯示的要少?
     allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
-        return !!imageObject.status;
+        return !!imageObject.status; // 暫時不處理失敗的部分
     }).map((imageObject) => {
-        return imageObject.data;
-
-        return imageObject.data.filter((image) => {
-            return parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
-        });
+        return imageObject.data; // 讓物件變成裡面的data 陣列
     });
 
-    var allImagesArray = [];
-    for (var i = 0; i < allPagesImagesArray.length; i++) {
-        var eachPageImages = allPagesImagesArray[i];
+    // 壓平所有頁數到同一個陣列
+    // 且，過濾掉因為頁數邊界可能造成的重複資料和動圖
+    // 過濾愛心數也在這裡
+    var allImagesArray = _.chain(allPagesImagesArray)
+        .flattenDepth(1)
+        .filter((image) => {
+            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
+        })
+        .uniqBy('illustId')
+        .sort((a, b) => {
+            return a['bookmarkCount'].toString().localeCompare(b['bookmarkCount'].toString()) ||
+                a['userId'].toString().localeCompare(b['userId'].toString()) ||
+                a['illustId'].toString().localeCompare(b['illustId'].toString());
+        })
+        .value(),
+        authorsObject = {},
+        authorArray = [];
 
-        for (var j = 0; j < eachPageImages.length; j++) {
-            var eachImage = eachPageImages[j];
-            allImagesArray.push(Object.assign({}, eachImage));
+    // 依作者分類:
+    for (var i = 0; i < allImagesArray.length; i++) {
+        var eachImage = allImagesArray[i];
+        if (authorsObject[eachImage.userId]) {
+            authorsObject[eachImage.userId].push(eachImage);
+        } else {
+            authorsObject[eachImage.userId] = [eachImage];
         }
     }
-    var object = {};
-    for (var i = 0; i < allImagesArray.length; i++) {
-        object[allImagesArray[i].illustId] = true;
-    }
-    console.log(Object.keys(object).length);
 
-    // fs.writeFileSync('result.json', JSON.stringify(authorsObject));
+    // 計算作者總星星數和取出基本資訊
+    for (var author in authorsObject) {
+        var authorImages = authorsObject[author],
+            totalLikedNumber = _.sumBy(authorImages, 'bookmarkCount');
+
+        authorsObject[author] = {
+            userId: author,
+            userName: authorImages[0].userName,
+            totalLikedNumber: totalLikedNumber,
+            images: authorImages
+        };
+        authorArray.push(authorsObject[author]);
+    }
+
+    // 作者排序
+    authorArray.sort((a, b) => {
+        return b.totalLikedNumber - a.totalLikedNumber;
+    });
+    console.log(authorArray[0].userId);
+
+    console.log(`images Number: ${ allImagesArray.length }`);
+    console.log(`author Number: ${ Object.keys(authorsObject).length }`);
+    fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
 // TODO:
