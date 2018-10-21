@@ -6,3 +6,4 @@ cache/
 cacheDirectory.json
 *.cache.log.json
 result.json
+input.json
