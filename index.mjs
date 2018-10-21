@@ -98,12 +98,10 @@ var getSearchHeader = function() {
 if (!fs.existsSync('./cacheDirectory.json')) {
     fs.writeFileSync('cacheDirectory.json', JSON.stringify({}));
 } else {
-    var contents = fs.readFileSync('cacheDirectory.json'),
+    var contents = fs.readFileSync('./cacheDirectory.json'),
         json = JSON.parse(contents);
-    cacheDirectory = Object.assign({}, json);
+    cacheDirectory = json;
 }
-
-console.log(cacheDirectory);
 
 firstSearch(getSearchUrl(keyword, page));
 
@@ -111,12 +109,15 @@ async function firstSearch(url) {
     // 為了避免pixiv 負擔過重
     // 先檢查有沒有快取 && 強制更新
     // 部份更新什麼的再說
-    if (false) {
-        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`),
+    if (cacheDirectory[getCacheFileName(keyword, likedLevel, false)]) {
+        console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
+        console.log(`快取的值為: ${ getCacheFileName(keyword, likedLevel, false) }`);
+        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`);
             json = JSON.parse(content);
         console.log(json.length);
         return;
     }
+
     console.log('');
     console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
@@ -184,7 +185,7 @@ async function firstSearch(url) {
 
     console.log('將快取資訊寫入cacheDirectory');
     cacheDirectory[getCacheFileName(keyword, likedLevel, false)] = true;
-    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(JSON.stringify(cacheDirectory)));
+    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
     // 開始過濾
     formatAllPagesImagesObject(allPagesImagesObject);
