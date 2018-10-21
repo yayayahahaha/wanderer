@@ -108,7 +108,6 @@ async function firstSearch(url) {
     totalCount = parseInt($('.count-badge').text(), 10);
     totalPages = Math.ceil(totalCount / 40);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`);
-    console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 
     var taskArray = [];
     for (var i = 0; i < totalPages; i++) {
@@ -136,18 +135,21 @@ async function firstSearch(url) {
 
     var task_search = new TaskSystem(taskArray, [], 16);
     var allPagesImagesArray = await task_search.doPromise();
-    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }`);
-    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
 
+    console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
     cacheDirectory[getCacheFileName(keyword, false)] = {};
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
+    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }`);
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
 
     return allPagesImagesArray;
 }
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
+    console.log('');
+    console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
     // 過濾掉失敗的頁數
     // !!: 過濾越早越好
     // 但不知道為什麼總數量比頁面上顯示的要少?
