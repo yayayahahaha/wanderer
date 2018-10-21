@@ -8,58 +8,6 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
-var task1 = new TaskSystem([function() {
-    return '1-1-1-1-1-1-1-1';
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('2-2-2-2-2-2-2-2');
-        }, 100 * 2 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('3-3-3-3-3-3-3-3');
-        }, 100 * 3 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('4-4-4-4-4-4-4-4');
-        }, 100 * 4 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('5-5-5-5-5-5-5-5');
-        }, 100 * 5 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('6-6-6-6-6-6-6-6');
-        }, 100 * 6 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('7-7-7-7-7-7-7-7');
-        }, 100 * 7 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('8-8-8-8-8-8-8-8');
-        }, 100 * 8 * 3);
-    });
-}, 9], [], 2);
-(async function() {
-    return;
-    var a = await task1.doPromise();
-    console.log(a);
-})();
-
-
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 // var keyword = 'kill la kill',
@@ -95,26 +43,32 @@ var getSearchHeader = function() {
     };
 
 // 檢查cacheDirectory.json 是否存在
-if (!fs.existsSync('cacheDirectory.json')) {
-    fs.writeFileSync(cacheDirectory.json, JSON.stringify({}));
+if (!fs.existsSync('./cacheDirectory.json')) {
+    fs.writeFileSync('cacheDirectory.json', JSON.stringify({}));
 } else {
-    var contents = fs.readFileSync('cacheDirectory.json'),
+    var contents = fs.readFileSync('./cacheDirectory.json'),
         json = JSON.parse(contents);
-    console.log(json);
+    cacheDirectory = json;
 }
 
-// firstSearch(getSearchUrl(keyword, page));
+// 故事從這裡開始
+firstSearch(getSearchUrl(keyword, page));
 
 async function firstSearch(url) {
     // 為了避免pixiv 負擔過重
     // 先檢查有沒有快取 && 強制更新
     // 部份更新什麼的再說
-    if (true) {
-        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`),
-            json = JSON.parse(content);
-        console.log(json.length);
+    if (cacheDirectory[getCacheFileName(keyword, likedLevel, false)]) {
+        console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
+        console.log(`快取的值為: ${ getCacheFileName(keyword, likedLevel, false) }`);
+        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`);
+            allPagesImagesArray = JSON.parse(content);
+
+        // 開始過濾
+        formatAllPagesImagesArray(allPagesImagesArray);
         return;
     }
+
     console.log('');
     console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
@@ -145,7 +99,7 @@ async function firstSearch(url) {
 
     totalCount = parseInt($('.count-badge').text(), 10);
     totalPages = Math.ceil(totalCount / 40);
-    console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`); // !! 與實際頁面數不符，沒有登入好像只有 10 頁
+    console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`);
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
 
     var taskArray = [];
@@ -176,26 +130,40 @@ async function firstSearch(url) {
     }
 
     var task_search = new TaskSystem(taskArray, [], 16);
-    var allPagesImagesObject = await task_search.doPromise();
+    var allPagesImagesArray = await task_search.doPromise();
     console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
-    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesObject));
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
+
+    console.log('將快取資訊寫入cacheDirectory');
+    cacheDirectory[getCacheFileName(keyword, likedLevel, false)] = true;
+    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
     // 開始過濾
-    formatAllPagesImagesObject(allPagesImagesObject);
+    formatAllPagesImagesArray(allPagesImagesArray);
 
     return;
     // 用來測試實際取到的結果
     fs.writeFileSync('result', data);
 }
-function formatAllPagesImagesObject(allPagesImagesObject) {
-    allPagesImagesObject = allPagesImagesObject.filter((imageObject, index) => {
+
+function formatAllPagesImagesArray(allPagesImagesArray) {
+    allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status;
     }).map((imageObject) => {
         return imageObject.data;
     });
 
-
-    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
+    var allImagesArray = [];
+    for (var i = 0; i < allPagesImagesArray.length; i++) {
+        var eachPageImages = allPagesImagesArray[i];
+        for (var j = 0; j < eachPageImages.length; j++) {
+            var eachImages = eachPageImages[j];
+            allImagesArray.push(Object.assign({}, eachImages));
+        }
+    }
+    console.log(allImagesArray[0]);
+    console.log(allImagesArray.length);
+    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesArray));
 }
 
 // TODO:
