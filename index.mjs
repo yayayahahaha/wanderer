@@ -147,6 +147,8 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status;
     }).map((imageObject) => {
+        return imageObject.data;
+
         return imageObject.data.filter((image) => {
             return parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
         });
@@ -161,6 +163,11 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
             allImagesArray.push(Object.assign({}, eachImage));
         }
     }
+    var object = {};
+    for (var i = 0; i < allImagesArray.length; i++) {
+        object[allImagesArray[i].illustId] = true;
+    }
+    console.log(Object.keys(object).length);
 
     // fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
