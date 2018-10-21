@@ -11,7 +11,8 @@ import {
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 // var keyword = 'kill la kill',
-var keyword = 'darling in the franxx',
+// var keyword = 'darling in the franxx',
+var keyword = 'skullgirl',
     page = 1,
     totalPages = null,
     totalCount = null,
@@ -154,15 +155,9 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         });
     });
 
-    var allImagesArray = [];
-    for (var i = 0; i < allPagesImagesArray.length; i++) {
-        var eachPageImages = allPagesImagesArray[i];
+    var allImagesArray = _.flattenDepth(allPagesImagesArray, 1);
+    console.log(allImagesArray.length);
 
-        for (var j = 0; j < eachPageImages.length; j++) {
-            var eachImage = eachPageImages[j];
-            allImagesArray.push(Object.assign({}, eachImage));
-        }
-    }
     var object = {};
     for (var i = 0; i < allImagesArray.length; i++) {
         object[allImagesArray[i].illustId] = true;
