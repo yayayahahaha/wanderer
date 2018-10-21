@@ -150,12 +150,15 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status;
     }).map((imageObject) => {
-        return imageObject.data;
+        return imageObject.data.filter((image) => {
+            return parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
+        });
     });
 
     var allImagesArray = [];
     for (var i = 0; i < allPagesImagesArray.length; i++) {
         var eachPageImages = allPagesImagesArray[i];
+
         for (var j = 0; j < eachPageImages.length; j++) {
             var eachImages = eachPageImages[j];
             allImagesArray.push(Object.assign({}, eachImages));
@@ -163,6 +166,16 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     }
     console.log(allImagesArray[0]);
     console.log(allImagesArray.length);
+
+    var typeObject = {};
+    for (var i = 0; i < allImagesArray.length; i++) {
+        if (allImagesArray[i].illustType == 2) {
+            console.log(allImagesArray[i]);
+        }
+        typeObject[allImagesArray[i].illustType] = true;
+    }
+    console.log(Object.keys(typeObject));
+
     fs.writeFileSync('result.json', JSON.stringify(allPagesImagesArray));
 }
 
