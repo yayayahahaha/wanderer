@@ -308,8 +308,6 @@ async function fetchSingleImagesUrl(singleArray) {
 
 // TODO:
 // mkdir 的錯誤捕捉
-// 透過搜尋的關鍵字的總total 決定爬幾頁後爬完
-// 且，透過標籤上的愛心數決定哪些才要爬
 
 // 爬完之後，將要爬的id 依照作者分類
 // 這時就可以產生出作者對id 的單一key 了
@@ -321,4 +319,4 @@ async function fetchSingleImagesUrl(singleArray) {
 // 單圖也放在集中的資料夾
 
 // 不過這樣無法逐一檢視
-// 所以可能在整個掃完後再特別產一個列表處理這樣u
+// 所以可能在整個掃完後再特別產一個列表處理這樣
