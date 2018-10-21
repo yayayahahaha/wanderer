@@ -8,58 +8,6 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
-var task1 = new TaskSystem([function() {
-    return '1-1-1-1-1-1-1-1';
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('2-2-2-2-2-2-2-2');
-        }, 100 * 2 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('3-3-3-3-3-3-3-3');
-        }, 100 * 3 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('4-4-4-4-4-4-4-4');
-        }, 100 * 4 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('5-5-5-5-5-5-5-5');
-        }, 100 * 5 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('6-6-6-6-6-6-6-6');
-        }, 100 * 6 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('7-7-7-7-7-7-7-7');
-        }, 100 * 7 * 3);
-    });
-}, function() {
-    return new Promise((resolve, reject) => {
-        setTimeout(function() {
-            resolve('8-8-8-8-8-8-8-8');
-        }, 100 * 8 * 3);
-    });
-}, 9], [], 2);
-(async function() {
-    return;
-    var a = await task1.doPromise();
-    console.log(a);
-})();
-
-
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 // var keyword = 'kill la kill',
