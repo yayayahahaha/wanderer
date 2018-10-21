@@ -227,15 +227,17 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
-function fetchSingleImagesUrl(argument) {
-    var url = 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=68345590';
+function fetchSingleImagesUrl() {
+    var url = 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=68688965';
     axios({
         method: 'get',
-        url: 'url',
-        headers: getSinegleHeader(804978)
-    }).then((res) => {
-        console.log(res);
-        console.log('then');
+        url: url,
+        headers: Object.assign(getSinegleHeader(804978), getSearchHeader())
+    }).then(({data: res}) => {
+        console.log(res.indexOf('{token:'));
+        // console.log(res);
+        fs.writeFileSync('result.json', res);
+        // var $ = cheerio.load(res);
     }).catch((error) => {
         console.error(error);
         console.log('catch');
