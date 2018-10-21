@@ -16,7 +16,7 @@ var keyword = 'skullgirl',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 1000,
+    likedLevel = 100,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -146,14 +146,17 @@ async function firstSearch(url) {
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
     // 過濾掉失敗的頁數和動圖
+    // 過濾愛心數也在這裡
+    // !!: 過濾越早越好
     allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status; // 暫時不處理失敗的部分
     }).map((imageObject) => {
         return imageObject.data.filter((image) => {
-            return parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
+            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
         });
     });
     // 但不知道為什麼總數量比頁面上顯示的要少?
+
 
     // 壓平所有頁數到同一個陣列
     // 且，過濾掉因為頁數邊界可能造成的重複資料
