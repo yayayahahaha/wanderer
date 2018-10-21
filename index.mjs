@@ -54,12 +54,12 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
+    fetchSingleImagesUrl();
+    return;
 
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
         { singleArray, multipleArray } = formatAllPagesImagesArray(allPagesImagesArray);
-    console.log(singleArray.length);
-    console.log(multipleArray.length);
-
+    console.log(singleArray);
 })();
 
 async function firstSearch(url) {
@@ -225,6 +225,21 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
     fs.writeFileSync('result.json', JSON.stringify(authorsObject));
+}
+
+function fetchSingleImagesUrl(argument) {
+    var url = 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=68345590';
+    axios({
+        method: 'get',
+        url: 'url',
+        headers: getSinegleHeader(804978)
+    }).then((res) => {
+        console.log(res);
+        console.log('then');
+    }).catch((error) => {
+        console.error(error);
+        console.log('catch');
+    });
 }
 
 // TODO:
