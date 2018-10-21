@@ -166,7 +166,8 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
                 a['illustId'].toString().localeCompare(b['illustId'].toString());
         })
         .value(),
-        authorsObject = {};
+        authorsObject = {},
+        authorArray = [];
 
     // 依作者分類:
     for (var i = 0; i < allImagesArray.length; i++) {
@@ -177,6 +178,27 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
             authorsObject[eachImage.userId] = [eachImage];
         }
     }
+
+    // 計算作者總星星數和取出基本資訊
+    for (var author in authorsObject) {
+        var authorImages = authorsObject[author],
+            totalLikedNumber = _.sumBy(authorImages, 'bookmarkCount');
+
+        authorsObject[author] = {
+            userId: author,
+            userName: authorImages[0].userName,
+            totalLikedNumber: totalLikedNumber,
+            images: authorImages
+        };
+        authorArray.push(authorsObject[author]);
+    }
+
+    // 作者排序
+    authorArray.sort((a, b) => {
+        return b.totalLikedNumber - a.totalLikedNumber;
+    });
+    console.log(authorArray[0].userId);
+
 
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
