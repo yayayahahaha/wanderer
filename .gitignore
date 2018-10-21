@@ -3,5 +3,6 @@
 **.jpeg
 node_modules/
 cache/
+cacheDirectory.json
 
 result.json
