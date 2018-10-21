@@ -157,9 +157,8 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
 
     // 壓平所有頁數到同一個陣列
     // 且，過濾掉因為頁數邊界可能造成的重複資料
-    var allImagesArray = _.chain(allPagesImagesArray).flattenDepth(1).uniqBy('illustId').value();
-    console.log(allImagesArray.length);
-
+    var allImagesArray = _.chain(allPagesImagesArray).flattenDepth(1).uniqBy('illustId').value(),
+        authorObject = _.keyBy(allImagesArray, 'userId');
 
     // fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
