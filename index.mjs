@@ -54,12 +54,13 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
-    fetchSingleImagesUrl();
-    return;
-
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
-        { singleArray, multipleArray } = formatAllPagesImagesArray(allPagesImagesArray);
-    console.log(singleArray);
+        {
+            singleArray,
+            multipleArray
+        } = formatAllPagesImagesArray(allPagesImagesArray);
+
+    fetchSingleImagesUrl(singleArray);
 })();
 
 async function firstSearch(url) {
@@ -227,18 +228,51 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
-function fetchSingleImagesUrl() {
+function fetchSingleImagesUrl(singleArray) {
+    var taskArray = [];
+    for (var i = 0; i < singleArray.length; i++) {
+        var eachImage = singleArray[i];
+        taskArray.push(_createReturnFunction(eachImage.illustId, eachImage.userId));
+    }
+
+    function _createReturnFunction(illust_id, authorId) {
+        var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
+            illust_id_length = illust_id.length,
+            headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
+        return function() {
+            return axios({
+                method: 'get',
+                url:  url,
+                headers: headers
+            }).then(({
+                data
+            }) => {
+                var startIndex = res.indexOf('68688965: {'),
+                    endIndex = res.indexOf('},user:'),
+                    data = res.slice(startIndex + 8 + 2, endIndex);
+                return data;
+            }).catch((error) => {
+                return error;
+            })
+        }
+    }
+
+    console.log(taskArray[0].toString());
+    return;
+
     var url = 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id=68688965';
     axios({
         method: 'get',
-        url: url,
+        url: `${ url }`,
         headers: Object.assign(getSinegleHeader(804978), getSearchHeader())
-    }).then(({data: res}) => {
+    }).then(({
+        data: res
+    }) => {
         var startIndex = res.indexOf('68688965: {'),
             endIndex = res.indexOf('},user:'),
             data = res.slice(startIndex + 8 + 2, endIndex);
         console.log(JSON.parse(data));
-        fs.writeFileSync('result.json', data);
+        // fs.writeFileSync('result.json', data);
     }).catch((error) => {
         console.error(error);
         console.log('catch');
