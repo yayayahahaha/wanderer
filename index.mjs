@@ -275,8 +275,6 @@ async function fetchSingleImagesUrl(singleArray) {
                         // tags: data.tags.tags,
                         singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
                     };
-
-                console.log(`call ${ data.userId } - ${ data.illustId }`);
                 return returnObject;
             }).catch((error) => {
                 console.log(error);
