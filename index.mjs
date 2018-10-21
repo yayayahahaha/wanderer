@@ -157,9 +157,19 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
 
     // 壓平所有頁數到同一個陣列
     // 且，過濾掉因為頁數邊界可能造成的重複資料
-    var allImagesArray = _.chain(allPagesImagesArray).flattenDepth(1).uniqBy('illustId').value(),
+    var allImagesArray = _.chain(allPagesImagesArray)
+        .flattenDepth(1)
+        .uniqBy('illustId')
+        .sort((a, b) => {
+            return a['bookmarkCount'].toString().localeCompare(b['bookmarkCount'].toString()) ||
+                a['userId'].toString().localeCompare(b['userId'].toString()) ||
+                a['illustId'].toString().localeCompare(b['illustId'].toString());
+        })
+        .value(),
         authorsObject = _.keyBy(allImagesArray, 'userId');
 
+    console.log(`images Number: ${ allImagesArray.length }`);
+    console.log(`author Number: ${ Object.keys(authorsObject).length }`);
     fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
