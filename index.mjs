@@ -16,7 +16,7 @@ var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 5000,
+    likedLevel = 10000,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -140,7 +140,7 @@ async function firstSearch(url) {
     fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
 
     console.log('將快取資訊寫入cacheDirectory.json');
-    cacheDirectory[getCacheFileName(keyword, false)] = true;
+    cacheDirectory[getCacheFileName(keyword, false)] = {};
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
 
@@ -256,9 +256,14 @@ async function fetchSingleImagesUrl(singleArray) {
     }
 
     var task_SingleArray = new TaskSystem(taskArray, [], 32);
-    var result = await task_SingleArray.doPromise();
+    var singleImagesArray = await task_SingleArray.doPromise();
+    for (var i = 0; i < singleImagesArray.length; i++) {
+        var eachImage = singleImagesArray[i].data,
+            singleImageCacheKey = `${ eachImage.userId } - ${ eachImage.illustId }`;
+        cacheDirectory[getCacheFileName(keyword)][singleImageCacheKey] = true;
+    }
 
-    fs.writeFileSync('result.json', JSON.stringify(result));
+    fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 }
 
 // TODO:
