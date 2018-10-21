@@ -128,10 +128,10 @@ async function firstSearch(url) {
 
     var task_search = new TaskSystem(taskArray, [], 16);
     var allPagesImagesArray = await task_search.doPromise();
-    console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
+    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }`);
     fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
 
-    console.log('將快取資訊寫入cacheDirectory');
+    console.log('將快取資訊寫入cacheDirectory.json');
     cacheDirectory[getCacheFileName(keyword, false)] = true;
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
