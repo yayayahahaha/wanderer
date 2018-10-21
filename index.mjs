@@ -113,10 +113,10 @@ async function firstSearch(url) {
         console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
         console.log(`快取的值為: ${ getCacheFileName(keyword, likedLevel, false) }`);
         var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`);
-            allPagesImagesObject = JSON.parse(content);
+            allPagesImagesArray = JSON.parse(content);
 
         // 開始過濾
-        formatAllPagesImagesObject(allPagesImagesObject);
+        formatAllPagesImagesArray(allPagesImagesArray);
         return;
     }
 
@@ -181,31 +181,31 @@ async function firstSearch(url) {
     }
 
     var task_search = new TaskSystem(taskArray, [], 16);
-    var allPagesImagesObject = await task_search.doPromise();
+    var allPagesImagesArray = await task_search.doPromise();
     console.log(`產生的快取檔案為: ${ ORIGINAL_RESULT_FILE_NAME }`);
-    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesObject));
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
 
     console.log('將快取資訊寫入cacheDirectory');
     cacheDirectory[getCacheFileName(keyword, likedLevel, false)] = true;
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
     // 開始過濾
-    formatAllPagesImagesObject(allPagesImagesObject);
+    formatAllPagesImagesArray(allPagesImagesArray);
 
     return;
     // 用來測試實際取到的結果
     fs.writeFileSync('result', data);
 }
 
-function formatAllPagesImagesObject(allPagesImagesObject) {
-    allPagesImagesObject = allPagesImagesObject.filter((imageObject, index) => {
+function formatAllPagesImagesArray(allPagesImagesArray) {
+    allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status;
     }).map((imageObject) => {
         return imageObject.data;
     });
 
-    console.log(allPagesImagesObject[0]);
-    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
+    console.log(allPagesImagesArray[0]);
+    fs.writeFileSync('result.json', JSON.stringify(allPagesImagesArray));
 }
 
 // TODO:
