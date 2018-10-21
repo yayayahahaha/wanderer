@@ -76,8 +76,6 @@ async function firstSearch(url) {
         var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, true) }`),
             allPagesImagesArray = JSON.parse(content);
 
-        // 開始過濾
-        // formatAllPagesImagesArray(allPagesImagesArray);
         return allPagesImagesArray;
     }
 
@@ -145,8 +143,6 @@ async function firstSearch(url) {
     cacheDirectory[getCacheFileName(keyword, false)] = true;
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
-    // 開始過濾
-    // formatAllPagesImagesArray(allPagesImagesArray);
 
     return allPagesImagesArray;
 }
