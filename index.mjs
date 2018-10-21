@@ -285,17 +285,16 @@ async function fetchSingleImagesUrl(singleArray) {
         }
     }
 
+    // 如果有些檔案是從cache 來的話要提示使用者
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ getCacheFileName(keyword, false) }.cache.log.json`;
-        console.log(`有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
+        console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
         fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
 
     console.log('');
     var task_SingleArray = new TaskSystem(taskArray, [], 4);
     var singleImagesArray = await task_SingleArray.doPromise();
-
-
 
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data;
