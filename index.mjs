@@ -60,7 +60,6 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         console.log('請修改 input.json');
         return;
     }
-
     var contents = fs.readFileSync('./input.json'),
         inputJSON = JSON.parse(contents);
 
@@ -73,6 +72,7 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         return;
     }
 
+    // 確認input 資料完畢
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
         {
             singleArray,
