@@ -113,8 +113,10 @@ async function firstSearch(url) {
         console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
         console.log(`快取的值為: ${ getCacheFileName(keyword, likedLevel, false) }`);
         var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, likedLevel, true) }`);
-            json = JSON.parse(content);
-        console.log(json.length);
+            allPagesImagesObject = JSON.parse(content);
+
+        // 開始過濾
+        formatAllPagesImagesObject(allPagesImagesObject);
         return;
     }
 
@@ -202,7 +204,7 @@ function formatAllPagesImagesObject(allPagesImagesObject) {
         return imageObject.data;
     });
 
-
+    console.log(allPagesImagesObject[0]);
     fs.writeFileSync('result.json', JSON.stringify(allPagesImagesObject));
 }
 
