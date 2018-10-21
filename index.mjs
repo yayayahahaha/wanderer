@@ -95,12 +95,15 @@ var getSearchHeader = function() {
     };
 
 // 檢查cacheDirectory.json 是否存在
-if (!fs.existsSync('cacheDirectory.json')) {
-    fs.writeFileSync(cacheDirectory.json, JSON.stringify({}));
+if (!fs.existsSync('./cacheDirectory.json')) {
+    fs.writeFileSync('cacheDirectory.json', JSON.stringify({}));
 } else {
     var contents = fs.readFileSync('cacheDirectory.json'),
         json = JSON.parse(contents);
+    cacheDirectory = Object.assign({}, json);
 }
+
+console.log(cacheDirectory);
 
 firstSearch(getSearchUrl(keyword, page));
 
@@ -190,6 +193,7 @@ async function firstSearch(url) {
     // 用來測試實際取到的結果
     fs.writeFileSync('result', data);
 }
+
 function formatAllPagesImagesObject(allPagesImagesObject) {
     allPagesImagesObject = allPagesImagesObject.filter((imageObject, index) => {
         return !!imageObject.status;
