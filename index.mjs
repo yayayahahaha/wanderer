@@ -15,7 +15,7 @@ var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 50,
+    likedLevel = 1000,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -164,22 +164,8 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
             allImagesArray.push(Object.assign({}, eachImage));
         }
     }
-    console.log(allImagesArray[0]);
-    console.log(allImagesArray.length);
 
-    // 依照作者做分類
-    var authorObject = {};
-    for (var i = 0; i < allImagesArray.length; i++) {
-        var eachImage = allImagesArray[i];
-        if (typeof authorObject[eachImage.userId] !== 'undefined') {
-            authorObject[eachImage.userId] = authorObject[eachImage.userId].concat(eachImage);
-        } else {
-            authorObject[eachImage.userId] = [eachImage];
-        }
-    }
-    console.log(Object.keys(authorObject).length);
-
-    fs.writeFileSync('result.json', JSON.stringify(authorObject));
+    fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
 // TODO:
