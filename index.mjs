@@ -11,12 +11,13 @@ import {
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 // var keyword = 'kill la kill',
-// var keyword = 'darling in the franxx',
-var keyword = 'skullgirl',
+// var keyword = 'skullgirl',
+var keyword = 'darling in the franxx',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 100,
+    likedLevel = 10000,
+    maxPage = 0,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -53,30 +54,44 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 }
 
 // 故事從這裡開始
-firstSearch(getSearchUrl(keyword, page));
+(async () => {
+    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
+        {
+            singleArray,
+            multipleArray
+        } = formatAllPagesImagesArray(allPagesImagesArray);
+
+    if (singleArray.length !== 0) {
+        fetchSingleImagesUrl(singleArray);
+    } else {
+        console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
+    }
+})();
 
 async function firstSearch(url) {
+    console.log('');
+    console.log(`欲查詢的關鍵字是: ${keyword}`);
+
+    // 快取檔檔名
+    maxPage = typeof maxPage === 'number' ? parseInt(maxPage, 10) : 0;
+    ORIGINAL_RESULT_FILE_NAME = maxPage ?
+        getCacheFileName(`${ keyword } - ${ maxPage }_pages`) :
+        getCacheFileName(keyword);
+
     // 為了避免pixiv 負擔過重
     // 先檢查有沒有快取 && 強制更新
     // 部份更新什麼的再說
-    if (cacheDirectory[getCacheFileName(keyword, false)]) {
+    if (cacheDirectory[ORIGINAL_RESULT_FILE_NAME]) {
         console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
-        console.log(`快取的值為: ${ getCacheFileName(keyword, false) }`);
-        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, true) }`),
+        console.log(`快取的值為: ${ ORIGINAL_RESULT_FILE_NAME }.json`);
+        var content = fs.readFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`),
             allPagesImagesArray = JSON.parse(content);
 
-        // 開始過濾
-        formatAllPagesImagesArray(allPagesImagesArray);
-        return;
+        return allPagesImagesArray;
     }
 
-    console.log('');
-    console.log(`欲查詢的關鍵字是: ${keyword}`);
     console.log(`實際搜尋的網址: ${url}`);
     console.log('開始搜尋..');
-
-    // 快取檔檔名
-    ORIGINAL_RESULT_FILE_NAME = getCacheFileName(keyword, true);
 
     var [data, error] = await axios({
         method: 'get',
@@ -101,7 +116,15 @@ async function firstSearch(url) {
     totalCount = parseInt($('.count-badge').text(), 10);
     totalPages = Math.ceil(totalCount / 40);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`);
-    console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
+
+    if (maxPage > 0) {
+        console.log(`!!有設定最大頁數，為 ${ maxPage }頁`);
+    }
+    totalPages = maxPage === 0 ?
+        totalPages :
+        maxPage > totalPages ?
+        totalPages :
+        maxPage;
 
     var taskArray = [];
     for (var i = 0; i < totalPages; i++) {
@@ -129,22 +152,21 @@ async function firstSearch(url) {
 
     var task_search = new TaskSystem(taskArray, [], 16);
     var allPagesImagesArray = await task_search.doPromise();
-    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }`);
-    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
 
+    console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
-    cacheDirectory[getCacheFileName(keyword, false)] = true;
+    cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {};
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
-    // 開始過濾
-    formatAllPagesImagesArray(allPagesImagesArray);
+    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray));
 
-    return;
-    // 用來測試實際取到的結果
-    fs.writeFileSync('result', data);
+    return allPagesImagesArray;
 }
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
+    console.log('');
+    console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
     // 過濾掉失敗的頁數
     // !!: 過濾越早越好
     // 但不知道為什麼總數量比頁面上顯示的要少?
@@ -170,9 +192,25 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         })
         .value(),
         authorsObject = {},
-        authorArray = [];
+        authorArray = [],
+        singleArray = [],
+        multipleArray = [];
 
-    // 依作者分類:
+    [].forEach.call(allImagesArray, (image, index) => {
+        if (parseInt(image.illustType, 10) === 0) {
+            singleArray.push(image);
+        } else if (parseInt(image.illustType, 10) === 1) {
+            multipleArray.push(image);
+        }
+    });
+
+    return {
+        singleArray,
+        multipleArray
+    };
+    // 底下的部分其實可以當做TODO
+
+    // 依作者分類
     for (var i = 0; i < allImagesArray.length; i++) {
         var eachImage = allImagesArray[i];
         if (authorsObject[eachImage.userId]) {
@@ -200,16 +238,94 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     authorArray.sort((a, b) => {
         return b.totalLikedNumber - a.totalLikedNumber;
     });
-    console.log(authorArray[0].userId);
 
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
     fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
+async function fetchSingleImagesUrl(singleArray) {
+    console.log('');
+    console.log(`開始取得單一圖檔的各自連結`);
+
+    var taskArray = [],
+        cacheLog = [];
+
+    for (var i = 0; i < singleArray.length; i++) {
+        var eachImage = singleArray[i];
+        taskArray.push(_createReturnFunction(eachImage.illustId, eachImage.userId));
+    }
+
+    function _getSingleCacheKey(authorId, illust_id) {
+        return `${ authorId } - ${ illust_id }`;
+    }
+
+    function _createReturnFunction(illust_id, authorId) {
+        var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
+            illustId = illust_id,
+            illust_id_length = illust_id.length,
+            headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
+
+        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
+        if (cacheObject) {
+            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片將從快取取得`);
+            return function() {
+                return cacheObject;
+            }
+        }
+
+        return function() {
+            return axios({
+                method: 'get',
+                url: url,
+                headers: headers
+            }).then(({
+                data: res
+            }) => {
+                var startIndex = res.indexOf(`${ illustId }: {`),
+                    endIndex = res.indexOf('},user:'),
+                    data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
+                    returnObject = {
+                        userId: data.userId,
+                        illustId: data.illustId,
+                        illustTitle: data.illustTitle,
+                        illustType: data.illustType,
+                        urls: data.urls,
+                        bookmarkCount: data.bookmarkCount,
+                        // tags: data.tags.tags,
+                        singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
+                    };
+                return returnObject;
+            }).catch((error) => {
+                console.log(error);
+                return error;
+            })
+        }
+    }
+
+    // 如果有些檔案是從cache 來的話要提示使用者
+    if (cacheLog.length !== 0) {
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.log.json`;
+        console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+    }
+
+    console.log('');
+    var task_SingleArray = new TaskSystem(taskArray, [], 4);
+    var singleImagesArray = await task_SingleArray.doPromise();
+
+    for (var i = 0; i < singleImagesArray.length; i++) {
+        var eachImage = singleImagesArray[i].data;
+        cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.singleImageCacheKey] = eachImage;
+    }
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+
+
+    fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
+}
+
 // TODO:
-// 透過搜尋的關鍵字的總total 決定爬幾頁後爬完
-// 且，透過標籤上的愛心數決定哪些才要爬
+// mkdir 的錯誤捕捉
 
 // 爬完之後，將要爬的id 依照作者分類
 // 這時就可以產生出作者對id 的單一key 了
@@ -221,4 +337,4 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
 // 單圖也放在集中的資料夾
 
 // 不過這樣無法逐一檢視
-// 所以可能在整個掃完後再特別產一個列表處理這樣u
+// 所以可能在整個掃完後再特別產一個列表處理這樣
