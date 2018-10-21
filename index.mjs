@@ -202,7 +202,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     });
     console.log(authorArray[0].userId);
 
-
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
     fs.writeFileSync('result.json', JSON.stringify(authorsObject));
