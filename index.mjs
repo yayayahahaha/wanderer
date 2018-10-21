@@ -17,7 +17,7 @@ var keyword = 'darling in the franxx',
     totalPages = null,
     totalCount = null,
     likedLevel = 10000,
-    maxPage = 10,
+    maxPage = 0,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
