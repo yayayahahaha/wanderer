@@ -3,7 +3,7 @@
 import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
-import request from 'request';
+import _ from 'lodash';
 import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
