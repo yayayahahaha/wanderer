@@ -17,6 +17,7 @@ var keyword = 'darling in the franxx',
     totalPages = null,
     totalCount = null,
     likedLevel = 10000,
+    maxPage = 10,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -67,13 +68,19 @@ async function firstSearch(url) {
     console.log('');
     console.log(`欲查詢的關鍵字是: ${keyword}`);
 
+    // 快取檔檔名
+    maxPage = typeof maxPage === 'number' ? parseInt(maxPage, 10) : 0;
+    ORIGINAL_RESULT_FILE_NAME = maxPage ?
+        getCacheFileName(`${ keyword } - ${ maxPage }_pages`) :
+        getCacheFileName(keyword);
+
     // 為了避免pixiv 負擔過重
     // 先檢查有沒有快取 && 強制更新
     // 部份更新什麼的再說
-    if (cacheDirectory[getCacheFileName(keyword, false)]) {
+    if (cacheDirectory[ORIGINAL_RESULT_FILE_NAME]) {
         console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
-        console.log(`快取的值為: ${ getCacheFileName(keyword, false) }`);
-        var content = fs.readFileSync(`./cache/${ getCacheFileName(keyword, true) }`),
+        console.log(`快取的值為: ${ ORIGINAL_RESULT_FILE_NAME }.json`);
+        var content = fs.readFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`),
             allPagesImagesArray = JSON.parse(content);
 
         return allPagesImagesArray;
@@ -81,9 +88,6 @@ async function firstSearch(url) {
 
     console.log(`實際搜尋的網址: ${url}`);
     console.log('開始搜尋..');
-
-    // 快取檔檔名
-    ORIGINAL_RESULT_FILE_NAME = getCacheFileName(keyword, true);
 
     var [data, error] = await axios({
         method: 'get',
@@ -108,6 +112,15 @@ async function firstSearch(url) {
     totalCount = parseInt($('.count-badge').text(), 10);
     totalPages = Math.ceil(totalCount / 40);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`);
+
+    if (maxPage > 0) {
+        console.log(`!!有設定最大頁數，為 ${ maxPage }頁`);
+    }
+    totalPages = maxPage === 0 ?
+        totalPages :
+        maxPage > totalPages ?
+        totalPages :
+        maxPage;
 
     var taskArray = [];
     for (var i = 0; i < totalPages; i++) {
@@ -138,11 +151,11 @@ async function firstSearch(url) {
 
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
-    cacheDirectory[getCacheFileName(keyword, false)] = {};
+    cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {};
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
-    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }`);
-    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }`, JSON.stringify(allPagesImagesArray));
+    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray));
 
     return allPagesImagesArray;
 }
@@ -242,13 +255,14 @@ async function fetchSingleImagesUrl(singleArray) {
     function _getSingleCacheKey(authorId, illust_id) {
         return `${ authorId } - ${ illust_id }`;
     }
+
     function _createReturnFunction(illust_id, authorId) {
         var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
             illustId = illust_id,
             illust_id_length = illust_id.length,
             headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
 
-        var cacheObject = cacheDirectory[getCacheFileName(keyword)][_getSingleCacheKey(authorId, illust_id)];
+        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
         if (cacheObject) {
             cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片將從快取取得`);
             return function() {
@@ -287,7 +301,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     // 如果有些檔案是從cache 來的話要提示使用者
     if (cacheLog.length !== 0) {
-        var cacheLogFileName = `${ getCacheFileName(keyword, false) }.cache.log.json`;
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
         fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
@@ -298,7 +312,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data;
-        cacheDirectory[getCacheFileName(keyword)][eachImage.singleImageCacheKey] = eachImage;
+        cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.singleImageCacheKey] = eachImage;
     }
     fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
 
