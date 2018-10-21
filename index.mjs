@@ -148,8 +148,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     allPagesImagesArray = allPagesImagesArray.filter((imageObject, index) => {
         return !!imageObject.status; // 暫時不處理失敗的部分
     }).map((imageObject) => {
-        return imageObject.data;
-
         return imageObject.data.filter((image) => {
             return parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
         });
