@@ -1,5 +1,7 @@
 // please make sure your nodejs version is higher than 10.4.0
 
+// TODO: 開始取得單張圖片的真實url
+
 import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
@@ -10,16 +12,17 @@ import {
 
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
-// var keyword = 'kill la kill',
-// var keyword = 'skullgirl',
-var keyword = 'darling in the franxx',
+var keyword = '',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 10000,
+    likedLevel = 100,
     maxPage = 0,
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
+
+var firstSearchTaskNumber = 16,
+    singleArrayTaskNumber = 16;
 
 var getSearchHeader = function() {
         return {
@@ -55,6 +58,23 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
+    if (!fs.existsSync('./input.json')) {
+        console.log('請修改 input.json');
+        return;
+    }
+    var contents = fs.readFileSync('./input.json'),
+        inputJSON = JSON.parse(contents);
+
+    keyword = inputJSON.keyword;
+    likedLevel = inputJSON.likedLevel ? inputJSON.likedLevel : 500;
+    maxPage = inputJSON.maxPage ? inputJSON.maxPage : 0;
+
+    if (!keyword) {
+        console.log('請在 input.json 檔裡輸入關鍵字');
+        return;
+    }
+
+    // 確認input 資料完畢
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
         {
             singleArray,
@@ -150,7 +170,7 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, [], 16);
+    var task_search = new TaskSystem(taskArray, [], firstSearchTaskNumber);
     var allPagesImagesArray = await task_search.doPromise();
 
     console.log('');
@@ -311,7 +331,7 @@ async function fetchSingleImagesUrl(singleArray) {
     }
 
     console.log('');
-    var task_SingleArray = new TaskSystem(taskArray, [], 4);
+    var task_SingleArray = new TaskSystem(taskArray, [], singleArrayTaskNumber);
     var singleImagesArray = await task_SingleArray.doPromise();
 
     for (var i = 0; i < singleImagesArray.length; i++) {
