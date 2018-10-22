@@ -173,7 +173,7 @@ async function firstSearch(url) {
                     images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
                 return images;
             }).catch((error) => {
-                return error;
+                throw error;
             });
         }
     }
@@ -325,8 +325,7 @@ async function fetchSingleImagesUrl(singleArray) {
                     };
                 return returnObject;
             }).catch((error) => {
-                console.log(error);
-                return error;
+                throw error;
             })
         }
     }
