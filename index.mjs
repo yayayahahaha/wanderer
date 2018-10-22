@@ -77,12 +77,14 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     // 確認input 資料完畢
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
         {
-            singleArray,
+            singleArray: singlePageArray,
             multipleArray
         } = formatAllPagesImagesArray(allPagesImagesArray);
 
-    if (singleArray.length !== 0) {
-        fetchSingleImagesUrl(singleArray);
+    if (singlePageArray.length !== 0) {
+        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray);
+
+        console.log(singleUrlArray.length);
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -351,6 +353,9 @@ async function fetchSingleImagesUrl(singleArray) {
     }
     fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
 
+
+    //TODO 傳回去之前要壓扁 + 過濾
+    return singleImagesArray;
 
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 }
