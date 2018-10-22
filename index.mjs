@@ -10,10 +10,10 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
-/*
+
 var sourceArray = [],
     targetArray = [];
-var task_object = new TaskSystem([], [], 2, function() { console.log() }, {});*/
+var task_object = new TaskSystem([], [], 2, function() { console.log() }, {});
 
 
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
@@ -142,6 +142,13 @@ async function firstSearch(url) {
     totalCount = parseInt($('.count-badge').text(), 10);
     totalPages = Math.ceil(totalCount / 40);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`);
+
+    // 沒有找到任何回傳結果的時候
+    if (totalCount === 0) {
+        console.log(`該搜尋關鍵字 ${ keyword } 找不到任何回傳結果`);
+        console.log('程式結束');
+        return;
+    }
 
     if (maxPage > 0) {
         console.log(`!!有設定最大頁數，為 ${ maxPage }頁`);
