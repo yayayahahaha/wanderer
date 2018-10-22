@@ -342,7 +342,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     // 濾掉失敗的檔案
     singleImagesArray = singleImagesArray.filter((eachResult) => {
-        return eachResult === 1;
+        return eachResult.status === 1;
     });
 
     for (var i = 0; i < singleImagesArray.length; i++) {
