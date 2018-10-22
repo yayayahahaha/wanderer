@@ -319,7 +319,7 @@ async function fetchSingleImagesUrl(singleArray) {
                         illustType: data.illustType,
                         urls: data.urls,
                         bookmarkCount: data.bookmarkCount,
-                        // tags: data.tags.tags,
+                        // tags: data.tags,
                         singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
                     };
                 return returnObject;
