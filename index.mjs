@@ -12,8 +12,7 @@ import {
 
 
 var sourceArray = [],
-    targetArray = [];
-var task_object = new TaskSystem([], [], 2, function() { console.log() }, {});
+var task_object = new TaskSystem(sourceArray, 2);
 
 
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
@@ -64,6 +63,7 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
+    return;
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
         return;
