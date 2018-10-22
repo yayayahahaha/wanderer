@@ -58,7 +58,6 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
-    return;
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
         return;
@@ -340,6 +339,11 @@ async function fetchSingleImagesUrl(singleArray) {
     console.log('');
     var task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber);
     var singleImagesArray = await task_SingleArray.doPromise();
+
+    // 濾掉失敗的檔案
+    singleImagesArray = singleImagesArray.filter((eachResult) => {
+        return eachResult === 1;
+    });
 
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data;
