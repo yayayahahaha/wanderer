@@ -10,6 +10,12 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
+/*
+var sourceArray = [],
+    targetArray = [];
+var task_object = new TaskSystem([], [], 2, function() { console.log() }, {});*/
+
+
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 var keyword = '',
@@ -170,7 +176,7 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, [], firstSearchTaskNumber);
+    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber);
     var allPagesImagesArray = await task_search.doPromise();
 
     console.log('');
@@ -331,7 +337,7 @@ async function fetchSingleImagesUrl(singleArray) {
     }
 
     console.log('');
-    var task_SingleArray = new TaskSystem(taskArray, [], singleArrayTaskNumber);
+    var task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber);
     var singleImagesArray = await task_SingleArray.doPromise();
 
     for (var i = 0; i < singleImagesArray.length; i++) {
