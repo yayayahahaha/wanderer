@@ -10,53 +10,6 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
-
-(async function() {
-    var sourceArray = [function() {
-            return new Promise((resolve, reject) => {
-                setTimeout(function() {
-                    resolve('first success data');
-                }, 10);
-            }).then((response) => {
-                return response;
-            });
-        }, function() {
-            return new Promise((resolve, reject) => {
-                setTimeout(function() {
-                    reject('second failed data')
-                }, 200);
-            }).then((response) => {
-                console.log('');
-                console.log('this shouldnt be trigger');
-                return response;
-            }).catch((error) => {
-                console.log('');
-                console.log('second failed data second result');
-                return error;
-            });
-        }, function() {
-            return new Promise((resolve, reject) => {
-                resolve('third data failed after success');
-            }).then((response) => {
-                console.log('');
-                console.log('this should trigger, but it will failed later');
-                JSON.parse('');
-                return response;
-            }).catch((error) => {
-                console.log('');
-                console.log('should trigger by json parse failed');
-                return error;
-            });
-        }, function() {
-            return 'normal function return';
-        }, 'stable variable return'],
-        task_object = new TaskSystem(sourceArray, 1),
-        result = await task_object.doPromise();
-        console.log(result);
-})();
-
-
-
 var currentSESSID = '35210002_3f5f551db1e08d29d3c4dd07f6469308';
 
 var keyword = '',
