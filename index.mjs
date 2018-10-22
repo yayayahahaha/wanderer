@@ -58,6 +58,7 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
+    return;
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
         return;
@@ -137,6 +138,13 @@ async function firstSearch(url) {
     totalPages = Math.ceil(totalCount / 40);
     console.log(`搜尋結束, 總筆數有 ${totalCount} 件, 共 ${totalPages} 頁`);
 
+    // 沒有找到任何回傳結果的時候
+    if (totalCount === 0) {
+        console.log(`該搜尋關鍵字 ${ keyword } 找不到任何回傳結果`);
+        console.log('程式結束');
+        return;
+    }
+
     if (maxPage > 0) {
         console.log(`!!有設定最大頁數，為 ${ maxPage }頁`);
     }
@@ -170,7 +178,7 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, [], firstSearchTaskNumber);
+    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber);
     var allPagesImagesArray = await task_search.doPromise();
 
     console.log('');
@@ -331,7 +339,7 @@ async function fetchSingleImagesUrl(singleArray) {
     }
 
     console.log('');
-    var task_SingleArray = new TaskSystem(taskArray, [], singleArrayTaskNumber);
+    var task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber);
     var singleImagesArray = await task_SingleArray.doPromise();
 
     for (var i = 0; i < singleImagesArray.length; i++) {
