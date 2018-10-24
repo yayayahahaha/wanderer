@@ -86,7 +86,6 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         // 取出該單一圖檔頁面上的真實路徑
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray);
 
-        // Next Part
         console.log(singleUrlArray.length);
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
@@ -362,8 +361,9 @@ async function fetchSingleImagesUrl(singleArray) {
     .filter((taskObject) => {
         return taskObject.status === 1;
     })
-    .map((taskObject) => {
-        return taskObject.data;
+    .map((imageObject) => {
+        imageObject.downloadUrl = imageObject.urls.original;
+        return imageObject.data;
     })
     .value();
     return singleImagesArray;
