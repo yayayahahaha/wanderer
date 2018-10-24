@@ -76,8 +76,6 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     }
 
     // 確認input 資料完畢，開始fetch
-    download('', `./images/${keyword}`);
-    return;
 
     // 取得該搜尋關鍵字的全部頁面
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
