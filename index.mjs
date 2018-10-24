@@ -405,7 +405,6 @@ function createPathAndName(roughArray) {
 }
 
 async function startDownloadTask(sourceArray = []) {
-
     var taskArray = [];
     for (var i = 0; i < sourceArray.length; i++) {
         taskArray.push(_createReturnFunction(sourceArray[i]));
@@ -414,10 +413,11 @@ async function startDownloadTask(sourceArray = []) {
     var result = await task_download.doPromise();
 
     for (var i = 0; i < result.length; i++) {
-        // console.log(result[i]);
+        console.log(result[i]);
     }
 
     function _createReturnFunction(object) {
+        // TODO: 這邊也要做快取
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
