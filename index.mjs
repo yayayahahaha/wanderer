@@ -187,7 +187,9 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber);
+    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber, undefined, undefined, {
+        randomDelay: 500
+    });
     var allPagesImagesArray = await task_search.doPromise();
 
     console.log('');
@@ -347,7 +349,9 @@ async function fetchSingleImagesUrl(singleArray) {
     }
 
     console.log('');
-    var task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber);
+    var task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+        randomDelay: 500
+    });
     var singleImagesArray = await task_SingleArray.doPromise();
 
     // 濾掉失敗的檔案
@@ -378,6 +382,9 @@ async function fetchSingleImagesUrl(singleArray) {
 }
 
 function createPathAndName(roughArray) {
+    roughArray = roughArray.slice().map((image) => {
+        console.log(image);
+    });
     startDownloadTask();
 }
 
