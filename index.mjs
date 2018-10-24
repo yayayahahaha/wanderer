@@ -409,7 +409,9 @@ async function startDownloadTask(sourceArray = []) {
     for (var i = 0; i < sourceArray.length; i++) {
         taskArray.push(_createReturnFunction(sourceArray[i]));
     }
-    var task_download = new TaskSystem(taskArray);
+    var task_download = new TaskSystem(taskArray, 3, undefined, undefined, {
+        randomDelay
+    });
     var result = await task_download.doPromise();
 
     for (var i = 0; i < result.length; i++) {
