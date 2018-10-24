@@ -406,29 +406,24 @@ function createPathAndName(roughArray) {
 
 async function startDownloadTask(sourceArray = []) {
 
+    var taskArray = [];
     for (var i = 0; i < sourceArray.length; i++) {
-        _createReturnFunction(sourceArray[i]);
+        taskArray.push(_createReturnFunction(sourceArray[i]));
+    }
+    var task_download = new TaskSystem(taskArray);
+    var result = await task_download.doPromise();
+
+    for (var i = 0; i < result.length; i++) {
+        console.log(result[i]);
     }
 
     function _createReturnFunction(object) {
         var url = object.url,
             filePath = object.filePath,
-            userId = object.userId;
-        return function() {
-            return axios({
-                method: 'get',
-                url: url,
-                headers: getSearchHeader()
-            }).then(({
-                data
-            }) => {
-                var $ = cheerio.load(data),
-                    images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
-                return images;
-            }).catch((error) => {
-                throw error;
-            });
-        }
+            userId = object.userId,
+            headers = getSinegleHeader(userId);
+
+        return download(url, filePath, headers);
     }
 }
 
@@ -464,10 +459,12 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
     }).catch((error) => {
         return [null, error];
     });
-    data.pipe(file);
-    file.on('finish', function() {
-        console.log('done!!!');
+    var result = await data.pipe(file).then(() => {
+        return true;
+    }).catch(() => {
+        return false;
     });
+    return result;
 }
 
 // TODO:
