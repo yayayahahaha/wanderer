@@ -76,6 +76,8 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     }
 
     // 確認input 資料完畢，開始fetch
+    download('https://i.pximg.net/img-original/img/2016/02/07/00/22/19/55133988_p0.png', `./images/${keyword}/skullgirl.png`);
+    return;
 
     // 取得該搜尋關鍵字的全部頁面
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
@@ -90,7 +92,7 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         // 取出該單一圖檔頁面上的真實路徑
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray);
 
-        startDownload();
+        // startDownload();
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -385,26 +387,41 @@ async function startDownloadTask(url, ) {
     // body...
 }
 
-async function download(url, filePath, callback = Function.prototype) {
+async function download(url, filePath, callback = Function.prototype, setting = {}) {
     // 濾掉尾巴的斜線
     if (/\/$/.test(filePath)) {
         filePath = filePath.slice(0, filePath.length - 1);
     }
     // 濾掉開頭的./
     if (/^\.\//.test(filePath)) {
-        filePath = filePath.slice(2, filePath.length - 1);
+        filePath = filePath.slice(2, filePath.length);
     }
 
     // 如果資料夾不存在會自動創建的系統
     var paths = filePath.split('/'),
         createdDirectory = [];
-    for (var i = 0; i < paths.length; i++) {
+    for (var i = 0; i < paths.length - 1; i++) {
         createdDirectory.push(paths[i]);
         var checkedDirectory = createdDirectory.join('/');
         !fs.existsSync(checkedDirectory) && fs.mkdirSync(checkedDirectory);
     }
 
-    // var file = fs.createWriteStream(paths);
+    var file = fs.createWriteStream(filePath);
+    var [data, error] = await axios({
+        method: 'get',
+        url: url,
+        responseType: 'stream',
+        headers: getSinegleHeader(83739)
+    }).then(({ data }) => {
+        return [data, null];
+    }).catch((error) => {
+        return [null, error];
+    });
+    data.pipe(file);
+    file.on('finish', function() {
+        console.log('done!!!');
+        console.log('done!!!');
+    });
 }
 
 // TODO:
