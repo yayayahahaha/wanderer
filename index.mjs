@@ -357,7 +357,7 @@ async function fetchSingleImagesUrl(singleArray) {
     fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
 
 
-    //TODO 傳回去之前要壓扁 + 過濾
+    // 過濾出失敗的後整理格式回傳
     singleImagesArray = _.chain(singleImagesArray)
     .filter((taskObject) => {
         return taskObject.status === 1;
@@ -366,7 +366,6 @@ async function fetchSingleImagesUrl(singleArray) {
         return taskObject.data;
     })
     .value();
-    console.log(singleImagesArray);
     return singleImagesArray;
 
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
