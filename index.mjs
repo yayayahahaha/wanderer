@@ -383,9 +383,13 @@ async function fetchSingleImagesUrl(singleArray) {
 
 function createPathAndName(roughArray) {
     roughArray = roughArray.slice().map((image) => {
-        console.log(image);
+        var returnObject = {
+            url: image.downloadUrl,
+            filePath: ''
+        };
+        return returnObject;
     });
-    startDownloadTask();
+    return roughArray;
 }
 
 async function startDownloadTask(sourceArray = []) {
