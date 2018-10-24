@@ -382,14 +382,14 @@ async function fetchSingleImagesUrl(singleArray) {
 }
 
 function createPathAndName(roughArray) {
-    roughArray = roughArray.slice().map((image) => {
+    var finalUrlArray = roughArray.slice().map((image) => {
         var returnObject = {
             url: image.downloadUrl,
             filePath: ''
         };
         return returnObject;
     });
-    return roughArray;
+    return finalUrlArray;
 }
 
 async function startDownloadTask(sourceArray = []) {
