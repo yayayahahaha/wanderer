@@ -358,6 +358,14 @@ async function fetchSingleImagesUrl(singleArray) {
 
 
     //TODO 傳回去之前要壓扁 + 過濾
+    singleImagesArray = _.chain(singleImagesArray)
+    .filter((taskObject) => {
+        return taskObject.status === 1;
+    })
+    .map((taskObject) => {
+        return taskObject.data;
+    })
+    .value();
     console.log(singleImagesArray);
     return singleImagesArray;
 
