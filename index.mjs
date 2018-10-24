@@ -377,6 +377,9 @@ async function fetchSingleImagesUrl(singleArray) {
             imageObject.data.downloadUrl = imageObject.data.urls.original;
             return imageObject.data;
         })
+        .sort((a, b) => {
+            return b.bookmarkCount - a.bookmarkCount;
+        })
         .value();
     return singleImagesArray;
 
