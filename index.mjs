@@ -76,23 +76,20 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
     // 確認input 資料完畢，開始fetch
 
-        // 取得該搜尋關鍵字的全部頁面
+    // 取得該搜尋關鍵字的全部頁面
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
 
         // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
-        { singleArray: singlePageArray, multipleArray } = formatAllPagesImagesArray(allPagesImagesArray);
+        {
+            singleArray: singlePageArray,
+            multipleArray
+        } = formatAllPagesImagesArray(allPagesImagesArray);
 
     if (singlePageArray.length !== 0) {
         // 取出該單一圖檔頁面上的真實路徑
-        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
-            imageDirectoryPath = './images',
-            imageCategoryPath = `./images/${ keyword }`;
+        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray);
 
-        // 檢查資料夾存在與否
-        !fs.existsSync(imageDirectoryPath) && fs.mkdirSync(imageDirectoryPath);
-        !fs.existsSync(imageCategoryPath) && fs.mkdirSync(imageCategoryPath);
-
-        console.log(singleUrlArray.length);
+        startDownload();
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -364,17 +361,27 @@ async function fetchSingleImagesUrl(singleArray) {
 
     // 過濾出失敗的後整理格式回傳
     singleImagesArray = _.chain(singleImagesArray)
-    .filter((taskObject) => {
-        return taskObject.status === 1;
-    })
-    .map((imageObject) => {
-        imageObject.data.downloadUrl = imageObject.data.urls.original;
-        return imageObject.data;
-    })
-    .value();
+        .filter((taskObject) => {
+            return taskObject.status === 1;
+        })
+        .map((imageObject) => {
+            imageObject.data.downloadUrl = imageObject.data.urls.original;
+            return imageObject.data;
+        })
+        .value();
     return singleImagesArray;
 
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
+}
+
+async function startDownload(input) {
+    imageDirectoryPath = './images',
+        imageCategoryPath = `./images/${ keyword }`;
+    // 檢查資料夾存在與否
+    !fs.existsSync(imageDirectoryPath) && fs.mkdirSync(imageDirectoryPath);
+    !fs.existsSync(imageCategoryPath) && fs.mkdirSync(imageCategoryPath);
+    console.log(singleUrlArray.length);
+    // body...
 }
 
 // TODO:
