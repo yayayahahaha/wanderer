@@ -84,7 +84,13 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
     if (singlePageArray.length !== 0) {
         // 取出該單一圖檔頁面上的真實路徑
-        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray);
+        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
+            imageDirectoryPath = './images',
+            imageCategoryPath = `./images/${ keyword }`;
+
+        // 檢查資料夾存在與否
+        !fs.existsSync(imageDirectoryPath) && fs.mkdirSync(imageDirectoryPath);
+        !fs.existsSync(imageCategoryPath) && fs.mkdirSync(imageCategoryPath);
 
         console.log(singleUrlArray.length);
     } else {
@@ -362,7 +368,7 @@ async function fetchSingleImagesUrl(singleArray) {
         return taskObject.status === 1;
     })
     .map((imageObject) => {
-        imageObject.downloadUrl = imageObject.urls.original;
+        imageObject.data.downloadUrl = imageObject.data.urls.original;
         return imageObject.data;
     })
     .value();
