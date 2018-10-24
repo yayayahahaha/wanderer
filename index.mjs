@@ -395,6 +395,7 @@ function createPathAndName(roughArray) {
             bookmarkCount = image.bookmarkCount,
             fileName = `${ userName } - ${ illustTitle } - ${ bookmarkCount }`,
             returnObject = {
+                userId: image.userId,
                 url: image.downloadUrl,
                 filePath: `./images/${ keyword }/${ fileName }.${ type }`
             };
@@ -404,10 +405,34 @@ function createPathAndName(roughArray) {
 }
 
 async function startDownloadTask(sourceArray = []) {
-    console.log(sourceArray);
+
+    for (var i = 0; i < sourceArray.length; i++) {
+        _createReturnFunction(sourceArray[i]);
+    }
+
+    function _createReturnFunction(object) {
+        var url = object.url,
+            filePath = object.filePath,
+            userId = object.userId;
+        return function() {
+            return axios({
+                method: 'get',
+                url: url,
+                headers: getSearchHeader()
+            }).then(({
+                data
+            }) => {
+                var $ = cheerio.load(data),
+                    images = JSON.parse($('#js-mount-point-search-result-list').attr('data-items'));
+                return images;
+            }).catch((error) => {
+                throw error;
+            });
+        }
+    }
 }
 
-async function download(url, filePath, callback = Function.prototype, setting = {}) {
+async function download(url, filePath, headers = {}, callback = Function.prototype, setting = {}) {
     // 濾掉尾巴的斜線
     if (/\/$/.test(filePath)) {
         filePath = filePath.slice(0, filePath.length - 1);
@@ -431,7 +456,7 @@ async function download(url, filePath, callback = Function.prototype, setting = 
         method: 'get',
         url: url,
         responseType: 'stream',
-        headers: getSinegleHeader(83739)
+        headers: headers
     }).then(({
         data
     }) => {
@@ -441,7 +466,6 @@ async function download(url, filePath, callback = Function.prototype, setting = 
     });
     data.pipe(file);
     file.on('finish', function() {
-        console.log('done!!!');
         console.log('done!!!');
     });
 }
