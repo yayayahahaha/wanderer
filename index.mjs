@@ -58,6 +58,7 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
 // 故事從這裡開始
 (async () => {
+
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
         return;
@@ -75,6 +76,8 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     }
 
     // 確認input 資料完畢，開始fetch
+    download('', `./images/${keyword}`);
+    return;
 
     // 取得該搜尋關鍵字的全部頁面
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
@@ -374,14 +377,34 @@ async function fetchSingleImagesUrl(singleArray) {
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 }
 
-async function startDownload(input) {
-    imageDirectoryPath = './images',
+async function startDownloadTask(url, ) {
+    var imageDirectoryPath = './images',
         imageCategoryPath = `./images/${ keyword }`;
     // 檢查資料夾存在與否
     !fs.existsSync(imageDirectoryPath) && fs.mkdirSync(imageDirectoryPath);
     !fs.existsSync(imageCategoryPath) && fs.mkdirSync(imageCategoryPath);
     console.log(singleUrlArray.length);
     // body...
+}
+
+async function download(url, filePath, callback = Function.prototype) {
+    if (/\/$/.test(filePath)) {
+        filePath = filePath.slice(0, filePath.length - 1);
+    }
+    if (/^\.\//.test(filePath)) {
+        filePath = filePath.slice(2, filePath.length - 1);
+    }
+
+    var paths = filePath.split('/'),
+        createdDirectory = [];
+
+    for (var i = 0; i < paths.length; i++) {
+        createdDirectory.push(paths[i]);
+        var checkedDirectory = createdDirectory.join('/');
+        !fs.existsSync(checkedDirectory) && fs.mkdirSync(checkedDirectory);
+    }
+
+    // var file = fs.createWriteStream(paths);
 }
 
 // TODO:
