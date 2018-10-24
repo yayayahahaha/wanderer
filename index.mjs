@@ -384,12 +384,18 @@ async function fetchSingleImagesUrl(singleArray) {
 }
 
 function createPathAndName(roughArray) {
-    console.log(roughArray[0]);
     var finalUrlArray = roughArray.slice().map((image) => {
-        var returnObject = {
-            url: image.downloadUrl,
-            filePath: ''
-        };
+        var spliter = image.downloadUrl.split('.'),
+            type = spliter[spliter.length - 1],
+            userName = image.userName,
+            illustTitle = image.illustTitle,
+            bookmarkCount = image.bookmarkCount,
+            fileName = `${ userName } - ${ illustTitle } - ${ bookmarkCount }`,
+            returnObject = {
+                url: image.downloadUrl,
+                filePath: `./images/${ keyword }/${ fileName }.${ type }`
+            };
+        console.log(returnObject);
         return returnObject;
     });
     return finalUrlArray;
