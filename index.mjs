@@ -418,6 +418,7 @@ async function startDownloadTask(sourceArray = []) {
 
     function _createReturnFunction(object) {
         // TODO: 這邊也要做快取
+        // 在cacheDirectory 裡面做個downloaded 之類的
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
