@@ -414,57 +414,56 @@ async function startDownloadTask(sourceArray = []) {
     var result = await task_download.doPromise();
 
     for (var i = 0; i < result.length; i++) {
-        console.log(result[i]);
+        // console.log(result[i]);
     }
 
     function _createReturnFunction(object) {
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
-            headers = getSinegleHeader(userId);
+            headers = {};
 
         return download(url, filePath, headers);
     }
 }
 
 async function download(url, filePath, headers = {}, callback = Function.prototype, setting = {}) {
-    // 濾掉尾巴的斜線
-    if (/\/$/.test(filePath)) {
-        filePath = filePath.slice(0, filePath.length - 1);
-    }
-    // 濾掉開頭的./
-    if (/^\.\//.test(filePath)) {
-        filePath = filePath.slice(2, filePath.length);
-    }
+    return new Promise(async (resolve, reject) => {
+        // 濾掉尾巴的斜線
+        if (/\/$/.test(filePath)) {
+            filePath = filePath.slice(0, filePath.length - 1);
+        }
+        // 濾掉開頭的./
+        if (/^\.\//.test(filePath)) {
+            filePath = filePath.slice(2, filePath.length);
+        }
 
-    // 如果資料夾不存在會自動創建的系統
-    var paths = filePath.split('/'),
-        createdDirectory = [];
-    for (var i = 0; i < paths.length - 1; i++) {
-        createdDirectory.push(paths[i]);
-        var checkedDirectory = createdDirectory.join('/');
-        !fs.existsSync(checkedDirectory) && fs.mkdirSync(checkedDirectory);
-    }
+        // 如果資料夾不存在會自動創建的系統
+        var paths = filePath.split('/'),
+            createdDirectory = [];
+        for (var i = 0; i < paths.length - 1; i++) {
+            createdDirectory.push(paths[i]);
+            var checkedDirectory = createdDirectory.join('/');
+            !fs.existsSync(checkedDirectory) && fs.mkdirSync(checkedDirectory);
+        }
 
-    var file = fs.createWriteStream(filePath);
-    var [data, error] = await axios({
-        method: 'get',
-        url: url,
-        responseType: 'stream',
-        headers: headers
-    }).then(({
-        data
-    }) => {
-        return [data, null];
-    }).catch((error) => {
-        return [null, error];
+        var file = fs.createWriteStream(filePath);
+        await axios({
+            method: 'get',
+            url: url,
+            responseType: 'stream',
+            headers: headers
+        }).then(({
+            data
+        }) => {
+            data.pipe(file);
+            file.on('finish', function() {
+                resolve(true);
+            });
+        }).catch((error) => {
+            reject([null, error]);
+        });
     });
-    var result = await data.pipe(file).then(() => {
-        return true;
-    }).catch(() => {
-        return false;
-    });
-    return result;
 }
 
 // TODO:
