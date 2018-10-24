@@ -236,9 +236,9 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         multipleArray = [];
 
     [].forEach.call(allImagesArray, (image, index) => {
-        if (parseInt(image.illustType, 10) === 0) {
+        if (image.pageCount === 1) {
             singleArray.push(image);
-        } else if (parseInt(image.illustType, 10) === 1) {
+        } else if (image.pageCount !== 1) {
             multipleArray.push(image);
         }
     });
@@ -398,14 +398,13 @@ function createPathAndName(roughArray) {
                 url: image.downloadUrl,
                 filePath: `./images/${ keyword }/${ fileName }.${ type }`
             };
-        console.log(returnObject);
         return returnObject;
     });
     return finalUrlArray;
 }
 
 async function startDownloadTask(sourceArray = []) {
-    console.log(sourceArray.length);
+    console.log(sourceArray);
 }
 
 async function download(url, filePath, callback = Function.prototype, setting = {}) {
