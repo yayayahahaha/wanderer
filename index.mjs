@@ -326,6 +326,7 @@ async function fetchSingleImagesUrl(singleArray) {
                     data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
                     returnObject = {
                         userId: data.userId,
+                        userName: data.userName,
                         illustId: data.illustId,
                         illustTitle: data.illustTitle,
                         illustType: data.illustType,
@@ -334,6 +335,7 @@ async function fetchSingleImagesUrl(singleArray) {
                         // tags: data.tags,
                         singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
                     };
+
                 return returnObject;
             }).catch((error) => {
                 throw error;
@@ -382,6 +384,7 @@ async function fetchSingleImagesUrl(singleArray) {
 }
 
 function createPathAndName(roughArray) {
+    console.log(roughArray[0]);
     var finalUrlArray = roughArray.slice().map((image) => {
         var returnObject = {
             url: image.downloadUrl,
