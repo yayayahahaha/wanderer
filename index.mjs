@@ -88,9 +88,11 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
     if (singlePageArray.length !== 0) {
         // 取出該單一圖檔頁面上的真實路徑
-        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray);
+        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
+            finalUrlArray = createPathAndName(singleUrlArray);
 
-        startDownloadTask(singleUrlArray);
+        startDownloadTask(finalUrlArray); // 這應該是最後一行了
+
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -375,7 +377,11 @@ async function fetchSingleImagesUrl(singleArray) {
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 }
 
-async function startDownloadTask(sourceArray) {
+function createPathAndName(roughArray) {
+    startDownloadTask();
+}
+
+async function startDownloadTask(sourceArray = []) {
     console.log(sourceArray.length);
 }
 
@@ -404,7 +410,9 @@ async function download(url, filePath, callback = Function.prototype, setting = 
         url: url,
         responseType: 'stream',
         headers: getSinegleHeader(83739)
-    }).then(({ data }) => {
+    }).then(({
+        data
+    }) => {
         return [data, null];
     }).catch((error) => {
         return [null, error];
