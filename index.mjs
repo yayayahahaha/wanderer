@@ -421,7 +421,7 @@ async function startDownloadTask(sourceArray = []) {
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
-            headers = {};
+            headers = getSinegleHeader(userId);
 
         return download(url, filePath, headers);
     }
