@@ -76,8 +76,6 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     }
 
     // 確認input 資料完畢，開始fetch
-    download('https://i.pximg.net/img-original/img/2016/02/07/00/22/19/55133988_p0.png', `./images/${keyword}/skullgirl.png`);
-    return;
 
     // 取得該搜尋關鍵字的全部頁面
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
