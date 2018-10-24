@@ -388,16 +388,18 @@ async function startDownloadTask(url, ) {
 }
 
 async function download(url, filePath, callback = Function.prototype) {
+    // 濾掉尾巴的斜線
     if (/\/$/.test(filePath)) {
         filePath = filePath.slice(0, filePath.length - 1);
     }
+    // 濾掉開頭的./
     if (/^\.\//.test(filePath)) {
         filePath = filePath.slice(2, filePath.length - 1);
     }
 
+    // 如果資料夾不存在會自動創建的系統
     var paths = filePath.split('/'),
         createdDirectory = [];
-
     for (var i = 0; i < paths.length; i++) {
         createdDirectory.push(paths[i]);
         var checkedDirectory = createdDirectory.join('/');
