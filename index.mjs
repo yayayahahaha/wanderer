@@ -90,7 +90,7 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         // 取出該單一圖檔頁面上的真實路徑
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray);
 
-        // startDownload();
+        startDownloadTask(singleUrlArray);
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -375,14 +375,8 @@ async function fetchSingleImagesUrl(singleArray) {
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 }
 
-async function startDownloadTask(url, ) {
-    var imageDirectoryPath = './images',
-        imageCategoryPath = `./images/${ keyword }`;
-    // 檢查資料夾存在與否
-    !fs.existsSync(imageDirectoryPath) && fs.mkdirSync(imageDirectoryPath);
-    !fs.existsSync(imageCategoryPath) && fs.mkdirSync(imageCategoryPath);
-    console.log(singleUrlArray.length);
-    // body...
+async function startDownloadTask(sourceArray) {
+    console.log(sourceArray.length);
 }
 
 async function download(url, filePath, callback = Function.prototype, setting = {}) {
