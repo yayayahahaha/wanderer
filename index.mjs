@@ -390,6 +390,7 @@ function createPathAndName(roughArray) {
             type = spliter[spliter.length - 1],
             userName = image.userName,
             illustTitle = image.illustTitle,
+            illustId = image.illustId,
             bookmarkCount = image.bookmarkCount,
             fileName = `${ userName } - ${ illustTitle } - ${ bookmarkCount }`,
             returnObject = {
@@ -414,15 +415,27 @@ async function startDownloadTask(sourceArray = []) {
         console.log(result[i]);
     }
 
+    function _getSingleCacheKey(authorId, illust_id) {
+        return `${ authorId } - ${ illust_id }`;
+    }
+
     function _createReturnFunction(object) {
         // TODO: 這邊也要做快取
         // 在cacheDirectory 裡面做個downloaded 之類的
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
-            headers = getSinegleHeader(userId);
+            illustId = object.illustId,
+            headers = getSinegleHeader(userId),
+            cacheKey = _getSingleCacheKey(userId, illustId);
 
-        return download(url, filePath, headers);
+        return download(url, filePath, headers, function(result, setting) {
+            if (result) {
+                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.downloadKey].downloaded = true;
+            }
+        }, {
+            downloadKey: cacheKey
+        });
     }
 }
 
@@ -455,11 +468,13 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         }).then(({
             data
         }) => {
+            callback(true, setting);
             data.pipe(file);
             file.on('finish', () => {
                 resolve(true);
             });
         }).catch((error) => {
+            callback(false, setting);
             reject([null, error]);
         });
     });
