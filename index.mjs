@@ -126,7 +126,9 @@ if (!fs.existsSync('./log/')) {
     }
 
     // 多重圖片的部分
-    if (true) {} else {
+    if (multipleArray.length !== 0) {
+        console.log(multipleArray.length);
+    } else {
         console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
 
