@@ -61,6 +61,16 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     cacheDirectory = json;
 }
 
+// 檢查cache/ 是否存在
+if (!fs.existsSync('./cache/')) {
+    fs.mkdirSync('./cache/');
+}
+
+// 檢查log/ 是否存在
+if (!fs.existsSync('./log/')) {
+    fs.mkdirSync('./log/');
+}
+
 // 故事從這裡開始
 (async () => {
 
@@ -234,13 +244,6 @@ async function firstSearch(url) {
     cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {};
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
-    // TODO
-    // 這部分一定要寫成function 放到library 裡面
-    if (!fs.existsSync('./cache/')) {
-        fs.mkdirSync('./cache/');
-    }
-
-
     console.log(`產生的快取檔案為: ./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
     fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray));
 
@@ -389,7 +392,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     // 如果有些檔案是從cache 來的話要提示使用者
     if (cacheLog.length !== 0) {
-        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.log.json`;
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
         fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
@@ -461,7 +464,7 @@ async function startDownloadTask(sourceArray = []) {
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
         if (_eachImageDownloadedChecker(object.cacheKey)) {
-            console.log(` 已下載過 ${object.filePath}，不重複下載`);
+            cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
             result.push({
                 status: 1,
                 data: `已下載過 ${object.filePath}，不重複下載`,
@@ -471,6 +474,13 @@ async function startDownloadTask(sourceArray = []) {
         }
 
         taskArray.push(_createReturnFunction(object));
+    }
+
+    // 有檔案因為下載過而不重複下載時需提示使用者
+    if (cacheLog.length !== 0) {
+       var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.downloaded.log.json`;
+       console.log(`!!有部分檔案來源為快取，詳見 ./log/${ cacheLogFileName }`);
+       fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
 
     if (taskArray.length !== 0) {
