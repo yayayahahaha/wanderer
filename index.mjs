@@ -227,7 +227,14 @@ async function firstSearch(url) {
     cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {};
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
-    console.log(`產生的快取檔案為: /cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
+    // TODO
+    // 這部分一定要寫成function 放到library 裡面
+    if (!fs.existsSync('./cache/')) {
+        fs.mkdirSync('./cache/');
+    }
+
+
+    console.log(`產生的快取檔案為: ./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
     fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray));
 
     return allPagesImagesArray;
