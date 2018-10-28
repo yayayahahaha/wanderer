@@ -2,10 +2,7 @@
 
 // TODO
 // 快取的機制的改進：
-// 取得單一圖片連結的陣列可以依照有沒有被下載過而減少array 的數目
-// 進而減少因為taskSystem randomDelay 造成的延遲時間
-// 還有在downloaded 的console.log 也可以和取得連結一樣改成寫入檔案
-// 當然也還有清除快取的指令，清除全部、清除部分等等的
+// 清除快取的指令，清除全部、清除部分等等的
 
 import axios from 'axios';
 import fs from 'fs'
@@ -15,7 +12,7 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
-var currentSESSID = '35210002_10fdc62a683e3cd027db6cc3d03c7615';
+var currentSESSID = '35210002_913b9c982c6862481beadc0f2f1ea4de';
 
 var keyword = '',
     page = 1,
@@ -52,6 +49,7 @@ var getSearchHeader = function() {
         return jsonEnd ? `${ base }.json` : base;
     };
 
+// 檢查是否存在的部分一定要做成library
 // 檢查cacheDirectory.json 是否存在
 if (!fs.existsSync('./cacheDirectory.json')) {
     fs.writeFileSync('cacheDirectory.json', JSON.stringify({}));
@@ -60,12 +58,10 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         json = JSON.parse(contents);
     cacheDirectory = json;
 }
-
 // 檢查cache/ 是否存在
 if (!fs.existsSync('./cache/')) {
     fs.mkdirSync('./cache/');
 }
-
 // 檢查log/ 是否存在
 if (!fs.existsSync('./log/')) {
     fs.mkdirSync('./log/');
