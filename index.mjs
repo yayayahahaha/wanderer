@@ -410,10 +410,23 @@ function createPathAndName(roughArray) {
 async function startDownloadTask(sourceArray = []) {
     var taskArray = [];
     for (var i = 0; i < sourceArray.length; i++) {
-        taskArray.push(_createReturnFunction(sourceArray[i]));
+        var object = sourceArray[i];
+
+        // 先檢查快取的原因是避免被randomDelay 拖到時間
+        if (_eachImageDownloadedChecker(object.cacheKey)) {
+            console.log(` 已下載過 ${object.filePath}，不重複下載`);
+            continue;
+        }
+
+        taskArray.push(_createReturnFunction(object));
     }
-    var task_download = new TaskSystem(taskArray, 3);
-    var result = await task_download.doPromise();
+
+    var task_download = null,
+        result = [];
+    if (taskArray.length !== 0) {
+        task_download = new TaskSystem(taskArray, 3);
+        result = await task_download.doPromise();
+    }
 
     // 這裡應該已經完成了 : D
     fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
@@ -438,6 +451,13 @@ async function startDownloadTask(sourceArray = []) {
         }, {
             cacheKey
         });
+    }
+
+    function _eachImageDownloadedChecker(cacheKey) {
+        var keywordObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME],
+            eachImageObject = keywordObject[cacheKey],
+            downloaded = eachImageObject.downloaded;
+        return downloaded ? true : false;
     }
 }
 
