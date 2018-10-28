@@ -5,6 +5,7 @@
 // 取得單一圖片連結的陣列可以依照有沒有被下載過而減少array 的數目
 // 進而減少因為taskSystem randomDelay 造成的延遲時間
 // 還有在downloaded 的console.log 也可以和取得連結一樣改成寫入檔案
+// 當然也還有清除快取的指令，清除全部、清除部分等等的
 
 import axios from 'axios';
 import fs from 'fs'
