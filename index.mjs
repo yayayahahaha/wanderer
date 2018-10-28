@@ -419,10 +419,6 @@ async function startDownloadTask(sourceArray = []) {
         console.log(result[i]);
     }
 
-    function _getSingleCacheKey(authorId, illust_id) {
-        return `${ authorId } - ${ illust_id }`;
-    }
-
     function _createReturnFunction(object) {
         // TODO: 這邊也要做快取
         // 在cacheDirectory 裡面做個downloaded 之類的
