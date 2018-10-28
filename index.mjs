@@ -61,6 +61,16 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     cacheDirectory = json;
 }
 
+// 檢查cache/ 是否存在
+if (!fs.existsSync('./cache/')) {
+    fs.mkdirSync('./cache/');
+}
+
+// 檢查log/ 是否存在
+if (!fs.existsSync('./log/')) {
+    fs.mkdirSync('./log/');
+}
+
 // 故事從這裡開始
 (async () => {
 
@@ -234,13 +244,6 @@ async function firstSearch(url) {
     cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {};
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
-    // TODO
-    // 這部分一定要寫成function 放到library 裡面
-    if (!fs.existsSync('./cache/')) {
-        fs.mkdirSync('./cache/');
-    }
-
-
     console.log(`產生的快取檔案為: ./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
     fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray));
 
@@ -339,57 +342,9 @@ async function fetchSingleImagesUrl(singleArray) {
         taskArray.push(_createReturnFunction(eachImage.illustId, eachImage.userId));
     }
 
-    function _getSingleCacheKey(authorId, illust_id) {
-        return `${ authorId } - ${ illust_id }`;
-    }
-
-    function _createReturnFunction(illust_id, authorId) {
-        var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
-            illustId = illust_id,
-            illust_id_length = illust_id.length,
-            headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
-
-        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
-        if (cacheObject) {
-            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片將從快取取得`);
-            return function() {
-                return cacheObject;
-            }
-        }
-
-        return function() {
-            return axios({
-                method: 'get',
-                url: url,
-                headers: headers
-            }).then(({
-                data: res
-            }) => {
-                var startIndex = res.indexOf(`${ illustId }: {`),
-                    endIndex = res.indexOf('},user:'),
-                    data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
-                    returnObject = {
-                        userId: data.userId,
-                        userName: data.userName,
-                        illustId: data.illustId,
-                        illustTitle: data.illustTitle,
-                        illustType: data.illustType,
-                        urls: data.urls,
-                        bookmarkCount: data.bookmarkCount,
-                        // tags: data.tags,
-                        singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
-                    };
-
-                return returnObject;
-            }).catch((error) => {
-                throw error;
-            })
-        }
-    }
-
     // 如果有些檔案是從cache 來的話要提示使用者
     if (cacheLog.length !== 0) {
-        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.log.json`;
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
         fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
@@ -428,6 +383,55 @@ async function fetchSingleImagesUrl(singleArray) {
     return singleImagesArray;
 
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
+
+    function _getSingleCacheKey(authorId, illust_id) {
+        return `${ authorId } - ${ illust_id }`;
+    }
+
+    function _createReturnFunction(illust_id, authorId) {
+        var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
+            illustId = illust_id,
+            illust_id_length = illust_id.length,
+            headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
+
+        // 檢查是否已經有過該頁面的資料
+        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
+        if (cacheObject) {
+            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片資訊將從快取取得`);
+            return function() {
+                return cacheObject;
+            }
+        }
+
+        return function() {
+            return axios({
+                method: 'get',
+                url: url,
+                headers: headers
+            }).then(({
+                data: res
+            }) => {
+                var startIndex = res.indexOf(`${ illustId }: {`),
+                    endIndex = res.indexOf('},user:'),
+                    data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
+                    returnObject = {
+                        userId: data.userId,
+                        userName: data.userName,
+                        illustId: data.illustId,
+                        illustTitle: data.illustTitle,
+                        illustType: data.illustType,
+                        urls: data.urls,
+                        bookmarkCount: data.bookmarkCount,
+                        // tags: data.tags,
+                        singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
+                    };
+
+                return returnObject;
+            }).catch((error) => {
+                throw error;
+            })
+        }
+    }
 }
 
 function createPathAndName(roughArray) {
@@ -453,6 +457,7 @@ function createPathAndName(roughArray) {
 async function startDownloadTask(sourceArray = []) {
     var taskArray = [],
         task_download = null,
+        cacheLog = [],
         result = [];
 
     for (var i = 0; i < sourceArray.length; i++) {
@@ -460,16 +465,27 @@ async function startDownloadTask(sourceArray = []) {
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
         if (_eachImageDownloadedChecker(object.cacheKey)) {
-            console.log(` 已下載過 ${object.filePath}，不重複下載`);
-            result.push({
-                status: 1,
-                data: `已下載過 ${object.filePath}，不重複下載`,
-                meta: object
-            });
-            continue;
+
+            // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
+            if (fs.existsSync(object.filePath)) {
+                cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
+                result.push({
+                    status: 1,
+                    data: `已下載過 ${object.filePath}，不重複下載`,
+                    meta: object
+                });
+                continue;
+            }
         }
 
         taskArray.push(_createReturnFunction(object));
+    }
+
+    // 有檔案因為下載過而不重複下載時需提示使用者
+    if (cacheLog.length !== 0) {
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.downloaded.log.json`;
+        console.log(`!!有部分檔案來源為快取，詳見 ./log/${ cacheLogFileName }`);
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
 
     if (taskArray.length !== 0) {
