@@ -237,7 +237,7 @@ async function firstSearch(url) {
 
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
-    cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {};
+    cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {}; // 這裡應該是部份更新的關鍵，可能要分成更新/ 強制更新/ 等等的
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
     console.log(`產生的快取檔案為: ./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
