@@ -1,7 +1,5 @@
 // please make sure your nodejs version is higher than 10.4.0
 
-// TODO: 開始取得單張圖片的真實url
-
 import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
@@ -458,7 +456,7 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
             data
         }) => {
             data.pipe(file);
-            file.on('finish', function() {
+            file.on('finish', () => {
                 resolve(true);
             });
         }).catch((error) => {
