@@ -342,54 +342,6 @@ async function fetchSingleImagesUrl(singleArray) {
         taskArray.push(_createReturnFunction(eachImage.illustId, eachImage.userId));
     }
 
-    function _getSingleCacheKey(authorId, illust_id) {
-        return `${ authorId } - ${ illust_id }`;
-    }
-
-    function _createReturnFunction(illust_id, authorId) {
-        var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
-            illustId = illust_id,
-            illust_id_length = illust_id.length,
-            headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
-
-        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
-        if (cacheObject) {
-            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片資訊將從快取取得`);
-            return function() {
-                return cacheObject;
-            }
-        }
-
-        return function() {
-            return axios({
-                method: 'get',
-                url: url,
-                headers: headers
-            }).then(({
-                data: res
-            }) => {
-                var startIndex = res.indexOf(`${ illustId }: {`),
-                    endIndex = res.indexOf('},user:'),
-                    data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
-                    returnObject = {
-                        userId: data.userId,
-                        userName: data.userName,
-                        illustId: data.illustId,
-                        illustTitle: data.illustTitle,
-                        illustType: data.illustType,
-                        urls: data.urls,
-                        bookmarkCount: data.bookmarkCount,
-                        // tags: data.tags,
-                        singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
-                    };
-
-                return returnObject;
-            }).catch((error) => {
-                throw error;
-            })
-        }
-    }
-
     // 如果有些檔案是從cache 來的話要提示使用者
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
@@ -431,6 +383,55 @@ async function fetchSingleImagesUrl(singleArray) {
     return singleImagesArray;
 
     fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
+
+    function _getSingleCacheKey(authorId, illust_id) {
+        return `${ authorId } - ${ illust_id }`;
+    }
+
+    function _createReturnFunction(illust_id, authorId) {
+        var url = `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${ illust_id }`,
+            illustId = illust_id,
+            illust_id_length = illust_id.length,
+            headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
+
+        // 檢查是否已經有過該頁面的資料
+        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
+        if (cacheObject) {
+            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片資訊將從快取取得`);
+            return function() {
+                return cacheObject;
+            }
+        }
+
+        return function() {
+            return axios({
+                method: 'get',
+                url: url,
+                headers: headers
+            }).then(({
+                data: res
+            }) => {
+                var startIndex = res.indexOf(`${ illustId }: {`),
+                    endIndex = res.indexOf('},user:'),
+                    data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
+                    returnObject = {
+                        userId: data.userId,
+                        userName: data.userName,
+                        illustId: data.illustId,
+                        illustTitle: data.illustTitle,
+                        illustType: data.illustType,
+                        urls: data.urls,
+                        bookmarkCount: data.bookmarkCount,
+                        // tags: data.tags,
+                        singleImageCacheKey: `${ data.userId } - ${ data.illustId }`
+                    };
+
+                return returnObject;
+            }).catch((error) => {
+                throw error;
+            })
+        }
+    }
 }
 
 function createPathAndName(roughArray) {
