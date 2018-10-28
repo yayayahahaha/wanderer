@@ -88,8 +88,6 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         // 取出該單一圖檔頁面上的真實路徑
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
             finalUrlArray = createPathAndName(singleUrlArray);
-
-        console.log('');
         console.log('取得單一圖片連結完畢');
 
         console.log('');
@@ -395,10 +393,11 @@ function createPathAndName(roughArray) {
             type = spliter[spliter.length - 1],
             userName = image.userName,
             illustTitle = image.illustTitle,
-            illustId = image.illustId,
             bookmarkCount = image.bookmarkCount,
             fileName = `${ userName } - ${ illustTitle } - ${ bookmarkCount }`,
+
             returnObject = {
+                cacheKey: image.singleImageCacheKey,
                 userId: image.userId,
                 url: image.downloadUrl,
                 filePath: `./images/${ keyword }/${ fileName }.${ type }`
@@ -432,14 +431,14 @@ async function startDownloadTask(sourceArray = []) {
             userId = object.userId,
             illustId = object.illustId,
             headers = getSinegleHeader(userId),
-            cacheKey = _getSingleCacheKey(userId, illustId);
+            cacheKey = object.cacheKey;
 
         return download(url, filePath, headers, function(result, setting) {
             if (result) {
-                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.downloadKey].downloaded = true;
+                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = true;
             }
         }, {
-            downloadKey: cacheKey
+            cacheKey
         });
     }
 }
@@ -473,13 +472,13 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         }).then(({
             data
         }) => {
-            // callback(true, setting);
+            callback(true, setting);
             data.pipe(file);
             file.on('finish', () => {
                 resolve(true);
             });
         }).catch((error) => {
-            // callback(false, setting);
+            callback(false, setting);
             reject([null, error]);
         });
     });
