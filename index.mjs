@@ -82,8 +82,12 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         {
             singleArray: singlePageArray,
             multipleArray
-        } = formatAllPagesImagesArray(allPagesImagesArray);
+        } = formatAllPagesImagesArray(allPagesImagesArray),
+        totalCount = 0,
+        successCount = 0,
+        failedCount = 0;
 
+    // 單一圖片的部分
     if (singlePageArray.length !== 0) {
         // 取出該單一圖檔頁面上的真實路徑
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
@@ -92,14 +96,32 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
         console.log('');
         console.log('開始下載: ');
-        var restul = await startDownloadTask(finalUrlArray); // 這應該是最後一行了
-        for (var i = 0; i < restul.length; i++) {
-            console.log(restul[i]);
+        var result = await startDownloadTask(finalUrlArray);
+
+        // 這應該是最後了
+        totalCount += result.length;
+        for (var i = 0; i < result.length; i++) {
+            if (result[i].status === 1) {
+                successCount++;
+            } else {
+                failedCount++;
+            }
         }
 
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
+
+    // 多重圖片的部分
+    if (true) {} else {
+        console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
+    }
+
+    // 還要加上單一圖片和多重圖片的各別數字
+    console.log(`總筆數: ${totalCount}`);
+    console.log(`總成功數: ${successCount}`);
+    console.log(`總失敗數: ${failedCount}`);
+
 })();
 
 async function firstSearch(url) {
