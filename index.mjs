@@ -507,6 +507,7 @@ async function startDownloadTask(sourceArray = []) {
 
     // 這裡應該已經完成了 : D
     fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
+    console.log('下載完畢');
     return result;
 
     function _createReturnFunction(object) {
