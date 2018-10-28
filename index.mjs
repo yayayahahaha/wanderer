@@ -335,10 +335,28 @@ async function fetchSingleImagesUrl(singleArray) {
     console.log(`開始取得單一圖檔的各自連結`);
 
     var taskArray = [],
-        cacheLog = [];
+        cacheLog = [],
+        cacheArray = [],
+        task_SingleArray = null,
+        singleImagesArray = [];
 
     for (var i = 0; i < singleArray.length; i++) {
-        var eachImage = singleArray[i];
+        var eachImage = singleArray[i],
+            authorId = eachImage.userId,
+            illust_id = eachImage.illustId;
+
+        // 檢查是否已經有過該頁面的資料
+        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
+        if (cacheObject) {
+            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片資訊將從快取取得`);
+            cacheArray.push({
+                status: 1,
+                data: cacheObject,
+                meta: cacheObject
+            });
+            continue;
+        }
+
         taskArray.push(_createReturnFunction(eachImage.illustId, eachImage.userId));
     }
 
@@ -349,11 +367,14 @@ async function fetchSingleImagesUrl(singleArray) {
         fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
 
-    console.log('');
-    var task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
-        randomDelay: 500
-    });
-    var singleImagesArray = await task_SingleArray.doPromise();
+    if (taskArray.length !== 0) {
+        console.log('');
+        task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+            randomDelay: 500
+        });
+        singleImagesArray = await task_SingleArray.doPromise();
+    }
+    singleImagesArray = singleImagesArray.concat(cacheArray); //補回從cache 來的數量
 
     // 濾掉失敗的檔案
     singleImagesArray = singleImagesArray.filter((eachResult) => {
@@ -393,15 +414,6 @@ async function fetchSingleImagesUrl(singleArray) {
             illustId = illust_id,
             illust_id_length = illust_id.length,
             headers = Object.assign(getSinegleHeader(authorId), getSearchHeader());
-
-        // 檢查是否已經有過該頁面的資料
-        var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
-        if (cacheObject) {
-            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片資訊將從快取取得`);
-            return function() {
-                return cacheObject;
-            }
-        }
 
         return function() {
             return axios({
@@ -495,6 +507,7 @@ async function startDownloadTask(sourceArray = []) {
 
     // 這裡應該已經完成了 : D
     fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
+    console.log('下載完畢');
     return result;
 
     function _createReturnFunction(object) {
