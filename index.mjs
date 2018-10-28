@@ -337,6 +337,7 @@ async function fetchSingleImagesUrl(singleArray) {
     var taskArray = [],
         cacheLog = [],
         cacheArray = [],
+        task_SingleArray = null,
         singleImagesArray = [];
 
     for (var i = 0; i < singleArray.length; i++) {
@@ -366,11 +367,13 @@ async function fetchSingleImagesUrl(singleArray) {
         fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
 
-    console.log('');
-    var task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
-        randomDelay: 500
-    });
-    singleImagesArray = await task_SingleArray.doPromise();
+    if (taskArray.length !== 0) {
+        console.log('');
+        task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+            randomDelay: 500
+        });
+        singleImagesArray = await task_SingleArray.doPromise();
+    }
     singleImagesArray = singleImagesArray.concat(cacheArray); //補回從cache 來的數量
 
     // 濾掉失敗的檔案
