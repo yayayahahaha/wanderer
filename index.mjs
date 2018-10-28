@@ -411,21 +411,27 @@ function createPathAndName(roughArray) {
 }
 
 async function startDownloadTask(sourceArray = []) {
-    var taskArray = [];
+    var taskArray = [],
+        task_download = null,
+        result = [];
+
     for (var i = 0; i < sourceArray.length; i++) {
         var object = sourceArray[i];
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
         if (_eachImageDownloadedChecker(object.cacheKey)) {
             console.log(` 已下載過 ${object.filePath}，不重複下載`);
+            result.push({
+                status: 1,
+                data: `已下載過 ${object.filePath}，不重複下載`,
+                meta: object
+            });
             continue;
         }
 
         taskArray.push(_createReturnFunction(object));
     }
 
-    var task_download = null,
-        result = [];
     if (taskArray.length !== 0) {
         task_download = new TaskSystem(taskArray, 3);
         result = await task_download.doPromise();
