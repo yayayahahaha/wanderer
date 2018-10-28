@@ -415,6 +415,8 @@ async function startDownloadTask(sourceArray = []) {
     var task_download = new TaskSystem(taskArray, 3);
     var result = await task_download.doPromise();
 
+    // 這裡應該已經完成了 : D
+    fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
     for (var i = 0; i < result.length; i++) {
         console.log(result[i]);
     }
