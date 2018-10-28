@@ -1,7 +1,5 @@
 // please make sure your nodejs version is higher than 10.4.0
 
-// TODO: 開始取得單張圖片的真實url
-
 import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
@@ -84,18 +82,50 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         {
             singleArray: singlePageArray,
             multipleArray
-        } = formatAllPagesImagesArray(allPagesImagesArray);
+        } = formatAllPagesImagesArray(allPagesImagesArray),
+        totalCount = 0,
+        successCount = 0,
+        failedCount = 0;
 
+    // 單一圖片的部分
     if (singlePageArray.length !== 0) {
         // 取出該單一圖檔頁面上的真實路徑
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
             finalUrlArray = createPathAndName(singleUrlArray);
+        console.log('取得單一圖片連結完畢');
 
-        startDownloadTask(finalUrlArray); // 這應該是最後一行了
+        console.log('');
+        console.log('開始下載: ');
+        var result = await startDownloadTask(finalUrlArray);
+
+        // 這應該是最後了
+        totalCount += result.length;
+        for (var i = 0; i < result.length; i++) {
+            if (result[i].status === 1) {
+                successCount++;
+            } else {
+                failedCount++;
+            }
+        }
 
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
+
+    // 多重圖片的部分
+    if (true) {} else {
+        console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
+    }
+
+    // 還要加上單一圖片和多重圖片的各別數字
+    console.log('');
+    console.log('==============================');
+    console.log(`關鍵字: ${ keyword }`);
+    console.log(`愛心數: > ${ likedLevel }`);
+    console.log(`總筆數: ${ totalCount }`);
+    console.log(`總成功數: ${ successCount }`);
+    console.log(`總失敗數: ${ failedCount }`);
+
 })();
 
 async function firstSearch(url) {
@@ -394,7 +424,9 @@ function createPathAndName(roughArray) {
             illustTitle = image.illustTitle,
             bookmarkCount = image.bookmarkCount,
             fileName = `${ userName } - ${ illustTitle } - ${ bookmarkCount }`,
+
             returnObject = {
+                cacheKey: image.singleImageCacheKey,
                 userId: image.userId,
                 url: image.downloadUrl,
                 filePath: `./images/${ keyword }/${ fileName }.${ type }`
@@ -405,16 +437,35 @@ function createPathAndName(roughArray) {
 }
 
 async function startDownloadTask(sourceArray = []) {
-    var taskArray = [];
-    for (var i = 0; i < sourceArray.length; i++) {
-        taskArray.push(_createReturnFunction(sourceArray[i]));
-    }
-    var task_download = new TaskSystem(taskArray, 3);
-    var result = await task_download.doPromise();
+    var taskArray = [],
+        task_download = null,
+        result = [];
 
-    for (var i = 0; i < result.length; i++) {
-        console.log(result[i]);
+    for (var i = 0; i < sourceArray.length; i++) {
+        var object = sourceArray[i];
+
+        // 先檢查快取的原因是避免被randomDelay 拖到時間
+        if (_eachImageDownloadedChecker(object.cacheKey)) {
+            console.log(` 已下載過 ${object.filePath}，不重複下載`);
+            result.push({
+                status: 1,
+                data: `已下載過 ${object.filePath}，不重複下載`,
+                meta: object
+            });
+            continue;
+        }
+
+        taskArray.push(_createReturnFunction(object));
     }
+
+    if (taskArray.length !== 0) {
+        task_download = new TaskSystem(taskArray, 3);
+        result = await task_download.doPromise();
+    }
+
+    // 這裡應該已經完成了 : D
+    fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
+    return result;
 
     function _createReturnFunction(object) {
         // TODO: 這邊也要做快取
@@ -422,9 +473,24 @@ async function startDownloadTask(sourceArray = []) {
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
-            headers = getSinegleHeader(userId);
+            illustId = object.illustId,
+            headers = getSinegleHeader(userId),
+            cacheKey = object.cacheKey;
 
-        return download(url, filePath, headers);
+        return download(url, filePath, headers, function(result, setting) {
+            if (result) {
+                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = true;
+            }
+        }, {
+            cacheKey
+        });
+    }
+
+    function _eachImageDownloadedChecker(cacheKey) {
+        var keywordObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME],
+            eachImageObject = keywordObject[cacheKey],
+            downloaded = eachImageObject.downloaded;
+        return downloaded ? true : false;
     }
 }
 
@@ -457,11 +523,13 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         }).then(({
             data
         }) => {
+            callback(true, setting);
             data.pipe(file);
-            file.on('finish', function() {
+            file.on('finish', () => {
                 resolve(true);
             });
         }).catch((error) => {
+            callback(false, setting);
             reject([null, error]);
         });
     });
