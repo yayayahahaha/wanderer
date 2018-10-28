@@ -472,7 +472,7 @@ async function startDownloadTask(sourceArray = []) {
         var object = sourceArray[i];
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
-        if (_eachImageDownloadedChecker(object.cacheKey)) {
+        if (_eachImageDownloadedChecker(object.cacheKey) === object.url) {
 
             // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
             if (fs.existsSync(object.filePath)) {
@@ -518,7 +518,7 @@ async function startDownloadTask(sourceArray = []) {
 
         return download(url, filePath, headers, function(result, setting) {
             if (result) {
-                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = true;
+                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
             }
         }, {
             cacheKey
@@ -529,7 +529,7 @@ async function startDownloadTask(sourceArray = []) {
         var keywordObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME],
             eachImageObject = keywordObject[cacheKey],
             downloaded = eachImageObject.downloaded;
-        return downloaded ? true : false;
+        return downloaded;
     }
 }
 
