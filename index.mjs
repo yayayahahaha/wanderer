@@ -464,13 +464,17 @@ async function startDownloadTask(sourceArray = []) {
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
         if (_eachImageDownloadedChecker(object.cacheKey)) {
-            cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
-            result.push({
-                status: 1,
-                data: `已下載過 ${object.filePath}，不重複下載`,
-                meta: object
-            });
-            continue;
+
+            // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
+            if (fs.existsSync(object.filePath)) {
+                cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
+                result.push({
+                    status: 1,
+                    data: `已下載過 ${object.filePath}，不重複下載`,
+                    meta: object
+                });
+                continue;
+            }
         }
 
         taskArray.push(_createReturnFunction(object));
@@ -478,9 +482,9 @@ async function startDownloadTask(sourceArray = []) {
 
     // 有檔案因為下載過而不重複下載時需提示使用者
     if (cacheLog.length !== 0) {
-       var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.downloaded.log.json`;
-       console.log(`!!有部分檔案來源為快取，詳見 ./log/${ cacheLogFileName }`);
-       fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.downloaded.log.json`;
+        console.log(`!!有部分檔案來源為快取，詳見 ./log/${ cacheLogFileName }`);
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
     }
 
     if (taskArray.length !== 0) {
