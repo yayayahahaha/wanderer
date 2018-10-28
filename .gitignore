@@ -3,8 +3,8 @@
 **.jpeg
 node_modules/
 cache/
+log/
 cacheDirectory.json
-*.cache.log.json
 result.json
 input.json
 .DS_Store
