@@ -89,6 +89,11 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
             finalUrlArray = createPathAndName(singleUrlArray);
 
+        console.log('');
+        console.log('取得單一圖片連結完畢');
+
+        console.log('');
+        console.log('開始下載: ');
         startDownloadTask(finalUrlArray); // 這應該是最後一行了
 
     } else {
@@ -468,13 +473,13 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         }).then(({
             data
         }) => {
-            callback(true, setting);
+            // callback(true, setting);
             data.pipe(file);
             file.on('finish', () => {
                 resolve(true);
             });
         }).catch((error) => {
-            callback(false, setting);
+            // callback(false, setting);
             reject([null, error]);
         });
     });
