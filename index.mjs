@@ -118,9 +118,13 @@ if (!fs.existsSync('./cacheDirectory.json')) {
     }
 
     // 還要加上單一圖片和多重圖片的各別數字
-    console.log(`總筆數: ${totalCount}`);
-    console.log(`總成功數: ${successCount}`);
-    console.log(`總失敗數: ${failedCount}`);
+    console.log('');
+    console.log('==============================');
+    console.log(`關鍵字: ${ keyword }`);
+    console.log(`愛心數: > ${ likedLevel }`);
+    console.log(`總筆數: ${ totalCount }`);
+    console.log(`總成功數: ${ successCount }`);
+    console.log(`總失敗數: ${ failedCount }`);
 
 })();
 
