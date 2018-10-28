@@ -92,7 +92,10 @@ if (!fs.existsSync('./cacheDirectory.json')) {
 
         console.log('');
         console.log('開始下載: ');
-        startDownloadTask(finalUrlArray); // 這應該是最後一行了
+        var restul = await startDownloadTask(finalUrlArray); // 這應該是最後一行了
+        for (var i = 0; i < restul.length; i++) {
+            console.log(restul[i]);
+        }
 
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
@@ -430,9 +433,7 @@ async function startDownloadTask(sourceArray = []) {
 
     // 這裡應該已經完成了 : D
     fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
-    for (var i = 0; i < result.length; i++) {
-        console.log(result[i]);
-    }
+    return result;
 
     function _createReturnFunction(object) {
         // TODO: 這邊也要做快取
