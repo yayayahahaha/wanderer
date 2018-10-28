@@ -2,10 +2,7 @@
 
 // TODO
 // 快取的機制的改進：
-// 取得單一圖片連結的陣列可以依照有沒有被下載過而減少array 的數目
-// 進而減少因為taskSystem randomDelay 造成的延遲時間
-// 還有在downloaded 的console.log 也可以和取得連結一樣改成寫入檔案
-// 當然也還有清除快取的指令，清除全部、清除部分等等的
+// 清除快取的指令，清除全部、清除部分等等的
 
 import axios from 'axios';
 import fs from 'fs'
@@ -15,7 +12,7 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
-var currentSESSID = '35210002_10fdc62a683e3cd027db6cc3d03c7615';
+var currentSESSID = '35210002_913b9c982c6862481beadc0f2f1ea4de';
 
 var keyword = '',
     page = 1,
@@ -52,6 +49,7 @@ var getSearchHeader = function() {
         return jsonEnd ? `${ base }.json` : base;
     };
 
+// 檢查是否存在的部分一定要做成library
 // 檢查cacheDirectory.json 是否存在
 if (!fs.existsSync('./cacheDirectory.json')) {
     fs.writeFileSync('cacheDirectory.json', JSON.stringify({}));
@@ -60,12 +58,10 @@ if (!fs.existsSync('./cacheDirectory.json')) {
         json = JSON.parse(contents);
     cacheDirectory = json;
 }
-
 // 檢查cache/ 是否存在
 if (!fs.existsSync('./cache/')) {
     fs.mkdirSync('./cache/');
 }
-
 // 檢查log/ 是否存在
 if (!fs.existsSync('./log/')) {
     fs.mkdirSync('./log/');
@@ -241,7 +237,7 @@ async function firstSearch(url) {
 
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
-    cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {};
+    cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {}; // 這裡應該是部份更新的關鍵，可能要分成更新/ 強制更新/ 等等的
     fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
 
     console.log(`產生的快取檔案為: ./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
@@ -476,7 +472,7 @@ async function startDownloadTask(sourceArray = []) {
         var object = sourceArray[i];
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
-        if (_eachImageDownloadedChecker(object.cacheKey)) {
+        if (_eachImageDownloadedChecker(object.cacheKey) === object.url) {
 
             // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
             if (fs.existsSync(object.filePath)) {
@@ -522,7 +518,7 @@ async function startDownloadTask(sourceArray = []) {
 
         return download(url, filePath, headers, function(result, setting) {
             if (result) {
-                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = true;
+                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
             }
         }, {
             cacheKey
@@ -533,7 +529,7 @@ async function startDownloadTask(sourceArray = []) {
         var keywordObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME],
             eachImageObject = keywordObject[cacheKey],
             downloaded = eachImageObject.downloaded;
-        return downloaded ? true : false;
+        return downloaded;
     }
 }
 
