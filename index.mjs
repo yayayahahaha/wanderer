@@ -351,7 +351,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
         var cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][_getSingleCacheKey(authorId, illust_id)];
         if (cacheObject) {
-            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片將從快取取得`);
+            cacheLog.push(`圖片 ${ _getSingleCacheKey(authorId, illust_id) } 已經有快取，圖片資訊將從快取取得`);
             return function() {
                 return cacheObject;
             }
@@ -453,6 +453,7 @@ function createPathAndName(roughArray) {
 async function startDownloadTask(sourceArray = []) {
     var taskArray = [],
         task_download = null,
+        cacheLog = [],
         result = [];
 
     for (var i = 0; i < sourceArray.length; i++) {
