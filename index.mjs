@@ -130,7 +130,8 @@ if (!fs.existsSync('./log/')) {
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
         // 取出漫畫圖檔頁面上的真實路徑"們"
-        await fetchMangaImagesUrl(multipleArray);
+        var finalMangoUrlArray = await fetchMangaImagesUrl(multipleArray);
+        console.log(finalMangoUrlArray.length);
     } else {
         console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -377,11 +378,6 @@ async function fetchSingleImagesUrl(singleArray) {
     }
     singleImagesArray = singleImagesArray.concat(cacheArray); //補回從cache 來的數量
 
-    // 濾掉失敗的檔案
-    singleImagesArray = singleImagesArray.filter((eachResult) => {
-        return eachResult.status === 1;
-    });
-
     // 存進快取
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data;
@@ -390,8 +386,11 @@ async function fetchSingleImagesUrl(singleArray) {
     fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
 
 
-    // 過濾出失敗的後整理格式回傳
+    // 濾掉失敗的檔案後整理格式回傳
     singleImagesArray = _.chain(singleImagesArray)
+        .filter((eachResult) => {
+            return eachResult.status === 1;
+        })
         .map((imageObject) => {
             imageObject.data.downloadUrl = imageObject.data.urls.original;
             return imageObject.data;
@@ -470,17 +469,19 @@ async function fetchMangaImagesUrl(mangoArray) {
     mangoPagesArray = await task_mango.doPromise();
     fs.writeFileSync('./result.json', JSON.stringify(mangoPagesArray));
 
-    // 濾掉失敗檔案
-    mangoPagesArray = mangoPagesArray.filter((item) => {
-        return item.status === 1;
-    });
-
     // 存進快取
     for (var i = 0; i < mangoPagesArray.length; i++) {
         var eachImage = mangoPagesArray[i].data;
         cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.mangoImageCacheKey] = eachImage;
     }
     fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+
+    // 濾掉失敗檔案
+    mangoPagesArray = mangoPagesArray.filter((item) => {
+        return item.status === 1;
+    });
+
+    return mangoPagesArray;
 
     function _createReturnFunction(id, userId, page, bookmarkCount, illustTitle, mangoImageCacheKey) {
         var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ id }&page=${ page }`,
