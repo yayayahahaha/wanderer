@@ -382,6 +382,7 @@ async function fetchSingleImagesUrl(singleArray) {
         return eachResult.status === 1;
     });
 
+    // 存進快取
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data;
         cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.singleImageCacheKey] = eachImage;
@@ -462,7 +463,6 @@ async function fetchMangaImagesUrl(mangoArray) {
         for (var j = 0; j < pageCount; j++) {
             taskArray.push(_createReturnFunction(id, userId, j, bookmarkCount));
         }
-
     }
 
     task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
