@@ -130,7 +130,8 @@ if (!fs.existsSync('./log/')) {
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
         // 取出漫畫圖檔頁面上的真實路徑"們"
-        var finalMangoUrlArray = await fetchMangaImagesUrl(multipleArray);
+        var mangoUrlArray = await fetchMangaImagesUrl(multipleArray),
+            finalMangoUrlArray = createMangoPathAndName(mangoUrlArray);
         console.log(finalMangoUrlArray);
         console.log(finalMangoUrlArray.length);
     } else {
@@ -547,6 +548,10 @@ function createPathAndName(roughArray) {
         return returnObject;
     });
     return finalUrlArray;
+}
+
+function createMangoPathAndName(roughArray) {
+    console.log(roughArray);
 }
 
 async function startDownloadTask(sourceArray = []) {
