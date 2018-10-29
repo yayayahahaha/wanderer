@@ -392,9 +392,6 @@ async function fetchSingleImagesUrl(singleArray) {
 
     // 過濾出失敗的後整理格式回傳
     singleImagesArray = _.chain(singleImagesArray)
-        .filter((taskObject) => {
-            return taskObject.status === 1;
-        })
         .map((imageObject) => {
             imageObject.data.downloadUrl = imageObject.data.urls.original;
             return imageObject.data;
@@ -458,10 +455,11 @@ async function fetchMangaImagesUrl(mangoArray) {
         var id = mangoArray[i].illustId,
             userId = mangoArray[i].userId,
             pageCount = mangoArray[i].pageCount,
-            bookmarkCount = mangoArray[i].bookmarkCount;
+            bookmarkCount = mangoArray[i].bookmarkCount,
+            illustTitle = mangoArray[i].illustTitle;
 
         for (var j = 0; j < pageCount; j++) {
-            taskArray.push(_createReturnFunction(id, userId, j, bookmarkCount));
+            taskArray.push(_createReturnFunction(id, userId, j, bookmarkCount, illustTitle));
         }
     }
 
@@ -471,9 +469,19 @@ async function fetchMangaImagesUrl(mangoArray) {
     mangoPagesArray = await task_mango.doPromise();
     fs.writeFileSync('./result.json', JSON.stringify(mangoPagesArray));
 
-    console.log(mangoPagesArray);
+    // 濾掉失敗檔案
+    mangoPagesArray = mangoPagesArray.filter((item) => {
+        return item.status === 1;
+    });
 
-    function _createReturnFunction(id, userId, page, bookmarkCount) {
+    // 存進快取
+    for (var i = 0; i < mangoPagesArray.length; i++) {
+        var eachImage = mangoPagesArray[i].data;
+        cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.mangoImageKey] = eachImage;
+    }
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+
+    function _createReturnFunction(id, userId, page, bookmarkCount, illustTitle) {
         var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ id }&page=${ page }`,
             headers = Object.assign(getSinegleHeader(userId), getSearchHeader());
         return function() {
@@ -491,7 +499,9 @@ async function fetchMangaImagesUrl(mangoArray) {
                     illustId: id,
                     userId,
                     page,
-                    bookmarkCount
+                    bookmarkCount,
+                    illustTitle,
+                    mangoImageKey: `${userId} - ${id} - p_${page}`
                 };
             }).catch((error) => {
                 throw error;
