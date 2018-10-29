@@ -1,5 +1,17 @@
 // please make sure your nodejs version is higher than 10.4.0
 
+
+
+
+
+
+// 先做cache
+
+
+
+
+
+
 // TODO
 // 快取的機制的改進：
 // 清除快取的指令，清除全部、清除部分等等的
