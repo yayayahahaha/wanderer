@@ -101,6 +101,7 @@ if (!fs.existsSync('./log/')) {
         failedCount = 0;
 
     // 單一圖片的部分
+/*
     if (singlePageArray.length !== 0) {
         // 取出該單一圖檔頁面上的真實路徑
         var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
@@ -124,6 +125,7 @@ if (!fs.existsSync('./log/')) {
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
+*/
 
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
