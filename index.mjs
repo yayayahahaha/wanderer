@@ -453,12 +453,16 @@ async function fetchMangaImagesUrl(mangoArray) {
         mangoPagesArray = [];
 
     // for (var i = 0; i < mangoArray.length; i++) {
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 1; i++) {
         var id = mangoArray[i].illustId,
             userId = mangoArray[i].userId,
-            pageCount = mangoArray[i].pageCount;
+            pageCount = mangoArray[i].pageCount,
+            bookmarkCount = mangoArray[i].bookmarkCount;
 
-        taskArray.push(_createReturnFunction(id, userId));
+        for (var j = 0; j < pageCount; j++) {
+            taskArray.push(_createReturnFunction(id, userId, j, bookmarkCount));
+        }
+
     }
 
     task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
@@ -467,12 +471,11 @@ async function fetchMangaImagesUrl(mangoArray) {
     mangoPagesArray = await task_mango.doPromise();
     fs.writeFileSync('./result.json', JSON.stringify(mangoPagesArray));
 
-    // console.log(mangoPagesArray);
+    console.log(mangoPagesArray);
 
-    function _createReturnFunction(id, userId) {
-        // https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=44145868&page=0
-        var url = `https://www.pixiv.net/member_illust.php?mode=manga&illust_id=${ id }`,
-            headers = Object.assign(getSinegleHeader(userId), getSearchHeader())
+    function _createReturnFunction(id, userId, page, bookmarkCount) {
+        var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ id }&page=${ page }`,
+            headers = Object.assign(getSinegleHeader(userId), getSearchHeader());
         return function() {
             return axios({
                 url,
@@ -480,9 +483,18 @@ async function fetchMangaImagesUrl(mangoArray) {
             }).then(({
                 data
             }) => {
-                return [data, null];
+                var $ = cheerio.load(data),
+                    downloadUrl = $('img').attr('src');
+
+                return {
+                    downloadUrl,
+                    illustId: id,
+                    userId,
+                    page,
+                    bookmarkCount
+                };
             }).catch((error) => {
-                throw [null, error];
+                throw error;
             });
         }
     }
