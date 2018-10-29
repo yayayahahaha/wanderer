@@ -131,6 +131,7 @@ if (!fs.existsSync('./log/')) {
     if (multipleArray.length !== 0) {
         // 取出漫畫圖檔頁面上的真實路徑"們"
         var finalMangoUrlArray = await fetchMangaImagesUrl(multipleArray);
+        console.log(finalMangoUrlArray);
         console.log(finalMangoUrlArray.length);
     } else {
         console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
@@ -481,6 +482,22 @@ async function fetchMangaImagesUrl(mangoArray) {
         return item.status === 1;
     });
 
+
+    // return [];
+    mangoPagesArray = _.chain(mangoPagesArray)
+        .filter((eachResult) => {
+            return eachResult.status === 1;
+        })
+        .map((item) => {
+            return item.data;
+        })
+        .sort((a, b) => {
+            return a['bookmarkCount'].toString().localeCompare(b['bookmarkCount'].toString()) ||
+                a['userId'].toString().localeCompare(b['userId'].toString()) ||
+                a['illustId'].toString().localeCompare(b['illustId'].toString()) ||
+                a['page'].toString().localeCompare(b['page'].toString());
+        })
+        .value();
     return mangoPagesArray;
 
     function _createReturnFunction(id, userId, page, bookmarkCount, illustTitle, mangoImageCacheKey) {
