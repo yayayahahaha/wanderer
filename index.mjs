@@ -455,7 +455,9 @@ async function fetchMangaImagesUrl(mangoArray) {
     // for (var i = 0; i < mangoArray.length; i++) {
     for (var i = 0; i < 2; i++) {
         var id = mangoArray[i].illustId,
-            userId = mangoArray[i].userId;
+            userId = mangoArray[i].userId,
+            pageCount = mangoArray[i].pageCount;
+
         taskArray.push(_createReturnFunction(id, userId));
     }
 
@@ -465,9 +467,10 @@ async function fetchMangaImagesUrl(mangoArray) {
     mangoPagesArray = await task_mango.doPromise();
     fs.writeFileSync('./result.json', JSON.stringify(mangoPagesArray));
 
-    console.log(mangoPagesArray);
+    // console.log(mangoPagesArray);
 
     function _createReturnFunction(id, userId) {
+        // https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=44145868&page=0
         var url = `https://www.pixiv.net/member_illust.php?mode=manga&illust_id=${ id }`,
             headers = Object.assign(getSinegleHeader(userId), getSearchHeader())
         return function() {
