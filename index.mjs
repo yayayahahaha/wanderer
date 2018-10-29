@@ -127,7 +127,8 @@ if (!fs.existsSync('./log/')) {
 
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
-        console.log(multipleArray.length);
+        // 取出漫畫圖檔頁面上的真實路徑"們"
+        await fetchMangaImagesUrl(multipleArray);
     } else {
         console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -442,6 +443,10 @@ async function fetchSingleImagesUrl(singleArray) {
             })
         }
     }
+}
+
+async function fetchMangaImagesUrl(mangoArray) {
+    console.log(mangoArray);
 }
 
 function createPathAndName(roughArray) {
