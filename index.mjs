@@ -459,7 +459,8 @@ async function fetchMangaImagesUrl(mangoArray) {
             illustTitle = mangoArray[i].illustTitle;
 
         for (var j = 0; j < pageCount; j++) {
-            taskArray.push(_createReturnFunction(id, userId, j, bookmarkCount, illustTitle));
+            var mangoImageCacheKey = `${userId} - ${id} - p_${j}`;
+            taskArray.push(_createReturnFunction(id, userId, j, bookmarkCount, illustTitle, mangoImageCacheKey));
         }
     }
 
@@ -477,11 +478,11 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 存進快取
     for (var i = 0; i < mangoPagesArray.length; i++) {
         var eachImage = mangoPagesArray[i].data;
-        cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.mangoImageKey] = eachImage;
+        cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.mangoImageCacheKey] = eachImage;
     }
     fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
 
-    function _createReturnFunction(id, userId, page, bookmarkCount, illustTitle) {
+    function _createReturnFunction(id, userId, page, bookmarkCount, illustTitle, mangoImageCacheKey) {
         var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ id }&page=${ page }`,
             headers = Object.assign(getSinegleHeader(userId), getSearchHeader());
         return function() {
@@ -501,7 +502,7 @@ async function fetchMangaImagesUrl(mangoArray) {
                     page,
                     bookmarkCount,
                     illustTitle,
-                    mangoImageKey: `${userId} - ${id} - p_${page}`
+                    mangoImageCacheKey
                 };
             }).catch((error) => {
                 throw error;
