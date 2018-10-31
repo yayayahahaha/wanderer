@@ -2,13 +2,7 @@
 
 
 
-
-
-
 // 先做cache
-
-
-
 
 
 
@@ -467,13 +461,14 @@ async function fetchMangaImagesUrl(mangoArray) {
     for (var i = 0; i < 1; i++) {
         var id = mangoArray[i].illustId,
             userId = mangoArray[i].userId,
+            userName = mangoArray[i].userName,
             pageCount = mangoArray[i].pageCount,
             bookmarkCount = mangoArray[i].bookmarkCount,
             illustTitle = mangoArray[i].illustTitle;
 
         for (var j = 0; j < pageCount; j++) {
             var mangoImageCacheKey = `${userId} - ${id} - p_${j}`;
-            taskArray.push(_createReturnFunction(id, userId, j, bookmarkCount, illustTitle, mangoImageCacheKey));
+            taskArray.push(_createReturnFunction(id, userId, userName, j, bookmarkCount, illustTitle, mangoImageCacheKey));
         }
     }
 
@@ -513,7 +508,7 @@ async function fetchMangaImagesUrl(mangoArray) {
         .value();
     return mangoPagesArray;
 
-    function _createReturnFunction(id, userId, page, bookmarkCount, illustTitle, mangoImageCacheKey) {
+    function _createReturnFunction(id, userId, userName, page, bookmarkCount, illustTitle, mangoImageCacheKey) {
         var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ id }&page=${ page }`,
             headers = Object.assign(getSinegleHeader(userId), getSearchHeader());
         return function() {
@@ -563,7 +558,24 @@ function createPathAndName(roughArray) {
 }
 
 function createMangoPathAndName(roughArray) {
-    console.log(roughArray);
+    var finalMangoUrlArray = roughArray.map((image) => {
+        var spliter = image.downloadUrl.split('.'),
+            type = spliter[spliter.length - 1],
+            userName = image.userName,
+            illustTitle = image.illustTitle,
+            bookmarkCount = image.bookmarkCount,
+            page = image.page,
+            fileName = `${userName} - ${illustTitle} - ${bookmarkCount} - p_${page}`,
+
+            returnObject = {
+                cacheKey: image.mangoImageCacheKey,
+                userId: image.userId,
+                url: image.downloadUrl,
+                filePath: `./images/${ keyword }/${ fileName }.${ type }`
+            };
+        return returnObject;
+    });
+    return finalMangoUrlArray;
 }
 
 async function startDownloadTask(sourceArray = []) {
