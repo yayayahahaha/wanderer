@@ -39,13 +39,14 @@ var getSearchHeader = function() {
             cookie: `PHPSESSID=${currentSESSID};`
         };
     },
-    getSinegleHeader = function(createrID) {
+    getSinegleHeader = function(createrID, mode) {
+        mode = mode ? mode : 'medium';
         if (!createrID) {
             console.log('請務必輸入該作者的ID');
             return {};
         }
         return {
-            referer: `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${createrID}`
+            referer: `https://www.pixiv.net/member_illust.php?mode=${ mode }&illust_id=${createrID}`
         };
     },
     getSearchUrl = function(keyword, page) {
@@ -118,7 +119,7 @@ if (!fs.existsSync('./log/')) {
 
             console.log('');
             console.log('開始下載: ');
-            var result = await startDownloadTask(finalUrlArray);
+            var result = await startDownloadTask(finalUrlArray, 'medium');
 
             // 這應該是最後了
             totalCount += result.length;
@@ -144,7 +145,7 @@ if (!fs.existsSync('./log/')) {
 
         console.log('');
         console.log('開始下載');
-        var resultMango = await startDownloadTask(finalMangoUrlArray);
+        var resultMango = await startDownloadTask(finalMangoUrlArray, 'manga_big');
 
         totalCount += resultMango.length;
         for (var i = 0; i < resultMango.length; i++) {
@@ -614,7 +615,7 @@ function createMangoPathAndName(roughArray) {
     return finalMangoUrlArray;
 }
 
-async function startDownloadTask(sourceArray = []) {
+async function startDownloadTask(sourceArray = [], mode) {
     var taskArray = [],
         task_download = null,
         cacheLog = [],
@@ -665,7 +666,7 @@ async function startDownloadTask(sourceArray = []) {
             filePath = object.filePath,
             userId = object.userId,
             illustId = object.illustId,
-            headers = getSinegleHeader(userId),
+            headers = getSinegleHeader(userId, mode),
             cacheKey = object.cacheKey;
 
         return download(url, filePath, headers, function(result, setting) {
