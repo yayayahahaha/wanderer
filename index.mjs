@@ -13,6 +13,9 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
+// TODO
+// SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
+// 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
 var currentSESSID = '35210002_6c906f649e5d8b6ee235d391a74dc10d';
 
 var keyword = '',
