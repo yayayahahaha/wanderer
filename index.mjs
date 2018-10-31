@@ -3,6 +3,8 @@
 // TODO
 // 快取的機制的改進：
 // 清除快取的指令，清除全部、清除部分等等的
+// 全域變數的減少使用，如cacheDirectory 或keyword 等
+// 此項完成就可以嘗試多重keyword 了
 
 import axios from 'axios';
 import fs from 'fs'
@@ -12,7 +14,10 @@ import {
     TaskSystem
 } from './flyc-lib/utils/TaskSystem';
 
-var currentSESSID = '35210002_913b9c982c6862481beadc0f2f1ea4de';
+// TODO
+// SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
+// 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
+var currentSESSID = '35210002_6c906f649e5d8b6ee235d391a74dc10d';
 
 var keyword = '',
     page = 1,
@@ -24,7 +29,9 @@ var keyword = '',
     cacheDirectory = {};
 
 var firstSearchTaskNumber = 16,
-    singleArrayTaskNumber = 16;
+    singleArrayTaskNumber = 8,
+    mangoArrayTaskNumber = 8,
+    downloadTaskNumber = 4;
 
 var getSearchHeader = function() {
         return {
@@ -32,13 +39,14 @@ var getSearchHeader = function() {
             cookie: `PHPSESSID=${currentSESSID};`
         };
     },
-    getSinegleHeader = function(createrID) {
+    getSinegleHeader = function(createrID, mode) {
+        mode = mode ? mode : 'medium';
         if (!createrID) {
             console.log('請務必輸入該作者的ID');
             return {};
         }
         return {
-            referer: `https://www.pixiv.net/member_illust.php?mode=medium&illust_id=${createrID}`
+            referer: `https://www.pixiv.net/member_illust.php?mode=${ mode }&illust_id=${createrID}`
         };
     },
     getSearchUrl = function(keyword, page) {
@@ -49,6 +57,7 @@ var getSearchHeader = function() {
         return jsonEnd ? `${ base }.json` : base;
     };
 
+// TODO
 // 檢查是否存在的部分一定要做成library
 // 檢查cacheDirectory.json 是否存在
 if (!fs.existsSync('./cacheDirectory.json')) {
@@ -101,31 +110,29 @@ if (!fs.existsSync('./log/')) {
         failedCount = 0;
 
     // 單一圖片的部分
-    /*
-        if (singlePageArray.length !== 0) {
-            // 取出該單一圖檔頁面上的真實路徑
-            var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
-                finalUrlArray = createPathAndName(singleUrlArray);
-            console.log('取得單一圖片連結完畢');
+    if (singlePageArray.length !== 0) {
+        // 取出該單一圖檔頁面上的真實路徑
+        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
+            finalUrlArray = createPathAndName(singleUrlArray);
+        console.log('取得單一圖片連結完畢');
 
-            console.log('');
-            console.log('開始下載: ');
-            var result = await startDownloadTask(finalUrlArray);
+        console.log('');
+        console.log('開始下載: ');
+        var result = await startDownloadTask(finalUrlArray, 'medium');
 
-            // 這應該是最後了
-            totalCount += result.length;
-            for (var i = 0; i < result.length; i++) {
-                if (result[i].status === 1) {
-                    successCount++;
-                } else {
-                    failedCount++;
-                }
+        // 這應該是最後了
+        totalCount += result.length;
+        for (var i = 0; i < result.length; i++) {
+            if (result[i].status === 1) {
+                successCount++;
+            } else {
+                failedCount++;
             }
-
-        } else {
-            console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
         }
-    */
+
+    } else {
+        console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
+    }
 
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
@@ -136,7 +143,7 @@ if (!fs.existsSync('./log/')) {
 
         console.log('');
         console.log('開始下載');
-        var resultMango = await startDownloadTask(finalMangoUrlArray);
+        var resultMango = await startDownloadTask(finalMangoUrlArray, 'manga_big');
 
         totalCount += resultMango.length;
         for (var i = 0; i < resultMango.length; i++) {
@@ -343,7 +350,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
 
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
-    fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
 async function fetchSingleImagesUrl(singleArray) {
@@ -414,8 +420,6 @@ async function fetchSingleImagesUrl(singleArray) {
         })
         .value();
     return singleImagesArray;
-
-    fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 
     function _getSingleCacheKey(authorId, illust_id) {
         return `${ authorId } - ${ illust_id }`;
@@ -502,7 +506,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+        task_mango = new TaskSystem(taskArray, mangoArrayTaskNumber, undefined, undefined, {
             randomDelay: 500
         });
         mangoPagesArray = await task_mango.doPromise();
@@ -521,8 +525,7 @@ async function fetchMangaImagesUrl(mangoArray) {
         return item.status === 1;
     });
 
-
-    // return [];
+    // 整理後回傳
     mangoPagesArray = _.chain(mangoPagesArray)
         .filter((eachResult) => {
             return eachResult.status === 1;
@@ -610,7 +613,7 @@ function createMangoPathAndName(roughArray) {
     return finalMangoUrlArray;
 }
 
-async function startDownloadTask(sourceArray = []) {
+async function startDownloadTask(sourceArray = [], mode) {
     var taskArray = [],
         task_download = null,
         cacheLog = [],
@@ -646,7 +649,7 @@ async function startDownloadTask(sourceArray = []) {
     }
 
     if (taskArray.length !== 0) {
-        task_download = new TaskSystem(taskArray, 3);
+        task_download = new TaskSystem(taskArray, downloadTaskNumber);
         result = await task_download.doPromise();
     }
 
@@ -655,14 +658,13 @@ async function startDownloadTask(sourceArray = []) {
     console.log('下載完畢');
     return result;
 
+    // 因為hoist 的關係就算宣告式放在return 後面也沒關係
     function _createReturnFunction(object) {
-        // TODO: 這邊也要做快取
-        // 在cacheDirectory 裡面做個downloaded 之類的
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
             illustId = object.illustId,
-            headers = getSinegleHeader(userId),
+            headers = getSinegleHeader(userId, mode),
             cacheKey = object.cacheKey;
 
         return download(url, filePath, headers, function(result, setting) {
