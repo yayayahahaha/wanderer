@@ -465,8 +465,7 @@ async function fetchMangaImagesUrl(mangoArray) {
         cacheArray = [],
         mangoPagesArray = [];
 
-    // for (var i = 0; i < mangoArray.length; i++) {
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < mangoArray.length; i++) {
         var id = mangoArray[i].illustId,
             userId = mangoArray[i].userId,
             userName = mangoArray[i].userName,
