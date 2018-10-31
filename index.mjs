@@ -138,9 +138,9 @@ if (!fs.existsSync('./log/')) {
         console.log('開始下載');
         var resultMango = await startDownloadTask(finalMangoUrlArray);
 
-        totalCount += result.length;
-        for (var i = 0; i < result.length; i++) {
-            if (result[i].status === 1) {
+        totalCount += resultMango.length;
+        for (var i = 0; i < resultMango.length; i++) {
+            if (resultMango[i].status === 1) {
                 successCount++;
             } else {
                 failedCount++;
