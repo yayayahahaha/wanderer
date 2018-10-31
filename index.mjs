@@ -55,6 +55,7 @@ var getSearchHeader = function() {
         return jsonEnd ? `${ base }.json` : base;
     };
 
+// TODO
 // 檢查是否存在的部分一定要做成library
 // 檢查cacheDirectory.json 是否存在
 if (!fs.existsSync('./cacheDirectory.json')) {
