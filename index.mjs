@@ -24,7 +24,8 @@ var keyword = '',
     cacheDirectory = {};
 
 var firstSearchTaskNumber = 16,
-    singleArrayTaskNumber = 16;
+    singleArrayTaskNumber = 16,
+    mangoArrayTaskNumber = 16;
 
 var getSearchHeader = function() {
         return {
@@ -502,7 +503,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+        task_mango = new TaskSystem(taskArray, mangoArrayTaskNumber, undefined, undefined, {
             randomDelay: 500
         });
         mangoPagesArray = await task_mango.doPromise();
