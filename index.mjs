@@ -657,9 +657,8 @@ async function startDownloadTask(sourceArray = []) {
     console.log('下載完畢');
     return result;
 
+    // 因為hoist 的關係就算宣告式放在return 後面也沒關係
     function _createReturnFunction(object) {
-        // TODO: 這邊也要做快取
-        // 在cacheDirectory 裡面做個downloaded 之類的
         var url = object.url,
             filePath = object.filePath,
             userId = object.userId,
