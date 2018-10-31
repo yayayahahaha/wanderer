@@ -1,11 +1,5 @@
 // please make sure your nodejs version is higher than 10.4.0
 
-
-
-// 先做cache
-
-
-
 // TODO
 // 快取的機制的改進：
 // 清除快取的指令，清除全部、清除部分等等的
@@ -472,6 +466,7 @@ async function fetchMangaImagesUrl(mangoArray) {
         }
     }
 
+    // 開始抓取真實連結
     task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
         randomDelay: 500
     });
