@@ -24,8 +24,9 @@ var keyword = '',
     cacheDirectory = {};
 
 var firstSearchTaskNumber = 16,
-    singleArrayTaskNumber = 16,
-    mangoArrayTaskNumber = 16;
+    singleArrayTaskNumber = 8,
+    mangoArrayTaskNumber = 8,
+    downloadTaskNumber = 4;
 
 var getSearchHeader = function() {
         return {
@@ -647,7 +648,7 @@ async function startDownloadTask(sourceArray = []) {
     }
 
     if (taskArray.length !== 0) {
-        task_download = new TaskSystem(taskArray, 3);
+        task_download = new TaskSystem(taskArray, downloadTaskNumber);
         result = await task_download.doPromise();
     }
 
