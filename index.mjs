@@ -4,6 +4,7 @@
 // 快取的機制的改進：
 // 清除快取的指令，清除全部、清除部分等等的
 // 全域變數的減少使用，如cacheDirectory 或keyword 等
+// 此項完成就可以嘗試多重keyword 了
 
 import axios from 'axios';
 import fs from 'fs'
