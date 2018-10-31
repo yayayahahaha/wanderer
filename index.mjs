@@ -345,7 +345,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
 
     console.log(`images Number: ${ allImagesArray.length }`);
     console.log(`author Number: ${ Object.keys(authorsObject).length }`);
-    fs.writeFileSync('result.json', JSON.stringify(authorsObject));
 }
 
 async function fetchSingleImagesUrl(singleArray) {
@@ -416,8 +415,6 @@ async function fetchSingleImagesUrl(singleArray) {
         })
         .value();
     return singleImagesArray;
-
-    fs.writeFileSync('result.json', JSON.stringify(cacheDirectory));
 
     function _getSingleCacheKey(authorId, illust_id) {
         return `${ authorId } - ${ illust_id }`;
@@ -523,8 +520,7 @@ async function fetchMangaImagesUrl(mangoArray) {
         return item.status === 1;
     });
 
-
-    // return [];
+    // 整理後回傳
     mangoPagesArray = _.chain(mangoPagesArray)
         .filter((eachResult) => {
             return eachResult.status === 1;
