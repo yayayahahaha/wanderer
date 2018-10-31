@@ -557,6 +557,7 @@ async function fetchMangaImagesUrl(mangoArray) {
                     downloadUrl,
                     illustId: id,
                     userId,
+                    userName,
                     page,
                     bookmarkCount,
                     illustTitle,
