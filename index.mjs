@@ -101,32 +101,52 @@ if (!fs.existsSync('./log/')) {
         failedCount = 0;
 
     // 單一圖片的部分
-    if (singlePageArray.length !== 0) {
-        // 取出該單一圖檔頁面上的真實路徑
-        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
-            finalUrlArray = createPathAndName(singleUrlArray);
-        console.log('取得單一圖片連結完畢');
+    /*
+        if (singlePageArray.length !== 0) {
+            // 取出該單一圖檔頁面上的真實路徑
+            var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
+                finalUrlArray = createPathAndName(singleUrlArray);
+            console.log('取得單一圖片連結完畢');
+
+            console.log('');
+            console.log('開始下載: ');
+            var result = await startDownloadTask(finalUrlArray);
+
+            // 這應該是最後了
+            totalCount += result.length;
+            for (var i = 0; i < result.length; i++) {
+                if (result[i].status === 1) {
+                    successCount++;
+                } else {
+                    failedCount++;
+                }
+            }
+
+        } else {
+            console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
+        }
+    */
+
+    // 多重圖片的部分
+    if (multipleArray.length !== 0) {
+        // 取出漫畫圖檔頁面上的真實路徑"們"
+        var mangoUrlArray = await fetchMangaImagesUrl(multipleArray),
+            finalMangoUrlArray = createMangoPathAndName(mangoUrlArray);
+        console.log('取得多重圖片連結完畢');
 
         console.log('');
-        console.log('開始下載: ');
-        var result = await startDownloadTask(finalUrlArray);
+        console.log('開始下載');
+        var resultMango = await startDownloadTask(finalMangoUrlArray);
 
-        // 這應該是最後了
-        totalCount += result.length;
-        for (var i = 0; i < result.length; i++) {
-            if (result[i].status === 1) {
+        totalCount += resultMango.length;
+        for (var i = 0; i < resultMango.length; i++) {
+            if (resultMango[i].status === 1) {
                 successCount++;
             } else {
                 failedCount++;
             }
         }
-
     } else {
-        console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
-    }
-
-    // 多重圖片的部分
-    if (true) {} else {
         console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
 
@@ -372,11 +392,7 @@ async function fetchSingleImagesUrl(singleArray) {
     }
     singleImagesArray = singleImagesArray.concat(cacheArray); //補回從cache 來的數量
 
-    // 濾掉失敗的檔案
-    singleImagesArray = singleImagesArray.filter((eachResult) => {
-        return eachResult.status === 1;
-    });
-
+    // 存進快取
     for (var i = 0; i < singleImagesArray.length; i++) {
         var eachImage = singleImagesArray[i].data;
         cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.singleImageCacheKey] = eachImage;
@@ -384,10 +400,10 @@ async function fetchSingleImagesUrl(singleArray) {
     fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
 
 
-    // 過濾出失敗的後整理格式回傳
+    // 濾掉失敗的檔案後整理格式回傳
     singleImagesArray = _.chain(singleImagesArray)
-        .filter((taskObject) => {
-            return taskObject.status === 1;
+        .filter((eachResult) => {
+            return eachResult.status === 1;
         })
         .map((imageObject) => {
             imageObject.data.downloadUrl = imageObject.data.urls.original;
@@ -442,6 +458,117 @@ async function fetchSingleImagesUrl(singleArray) {
     }
 }
 
+async function fetchMangaImagesUrl(mangoArray) {
+    var taskArray = [],
+        task_mango = null,
+        cacheLog = [],
+        cacheArray = [],
+        mangoPagesArray = [];
+
+    for (var i = 0; i < mangoArray.length; i++) {
+        var id = mangoArray[i].illustId,
+            userId = mangoArray[i].userId,
+            userName = mangoArray[i].userName,
+            pageCount = mangoArray[i].pageCount,
+            bookmarkCount = mangoArray[i].bookmarkCount,
+            illustTitle = mangoArray[i].illustTitle;
+
+        for (var j = 0; j < pageCount; j++) {
+            var mangoImageCacheKey = `${userId} - ${id} - p_${j}`,
+                cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][mangoImageCacheKey];
+
+            // 檢查cache
+            if (cacheObject) {
+                cacheLog.push(`圖片 ${ mangoImageCacheKey } 已經有快取，圖片資訊將從快取取得`);
+                cacheArray.push({
+                    status: 1,
+                    data: cacheObject,
+                    meta: cacheObject
+                });
+                continue;
+            }
+
+            taskArray.push(_createReturnFunction(id, userId, userName, j, bookmarkCount, illustTitle, mangoImageCacheKey));
+        }
+    }
+
+    // 如果有些檔案是從cache 來的話要提示使用者
+    if (cacheLog.length !== 0) {
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
+        console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+    }
+
+    // 開始抓取真實連結
+    if (taskArray.length) {
+        console.log('');
+        task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+            randomDelay: 500
+        });
+        mangoPagesArray = await task_mango.doPromise();
+    }
+    mangoPagesArray = mangoPagesArray.concat(cacheArray);
+
+    // 存進快取
+    for (var i = 0; i < mangoPagesArray.length; i++) {
+        var eachImage = mangoPagesArray[i].data;
+        cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.mangoImageCacheKey] = eachImage;
+    }
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+
+    // 濾掉失敗檔案
+    mangoPagesArray = mangoPagesArray.filter((item) => {
+        return item.status === 1;
+    });
+
+
+    // return [];
+    mangoPagesArray = _.chain(mangoPagesArray)
+        .filter((eachResult) => {
+            return eachResult.status === 1;
+        })
+        .map((item) => {
+            return item.data;
+        })
+        .sort((a, b) => {
+            return a['bookmarkCount'].toString().localeCompare(b['bookmarkCount'].toString()) ||
+                a['userId'].toString().localeCompare(b['userId'].toString()) ||
+                a['illustId'].toString().localeCompare(b['illustId'].toString()) ||
+                a['page'].toString().localeCompare(b['page'].toString());
+        })
+        .value();
+    return mangoPagesArray;
+
+    function _createReturnFunction(id, userId, userName, page, bookmarkCount, illustTitle, mangoImageCacheKey) {
+        var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ id }&page=${ page }`,
+            headers = Object.assign(getSinegleHeader(userId), getSearchHeader());
+        return function() {
+            return axios({
+                url,
+                headers
+            }).then(({
+                data
+            }) => {
+                var $ = cheerio.load(data),
+                    downloadUrl = $('img').attr('src');
+
+                return {
+                    downloadUrl,
+                    illustId: id,
+                    userId,
+                    userName,
+                    page,
+                    bookmarkCount,
+                    illustTitle,
+                    mangoImageCacheKey
+                };
+            }).catch((error) => {
+                throw error;
+            });
+        }
+    }
+}
+
 function createPathAndName(roughArray) {
     var finalUrlArray = roughArray.slice().map((image) => {
         var spliter = image.downloadUrl.split('.'),
@@ -462,6 +589,27 @@ function createPathAndName(roughArray) {
     return finalUrlArray;
 }
 
+function createMangoPathAndName(roughArray) {
+    var finalMangoUrlArray = roughArray.map((image) => {
+        var spliter = image.downloadUrl.split('.'),
+            type = spliter[spliter.length - 1],
+            userName = image.userName,
+            illustTitle = image.illustTitle,
+            bookmarkCount = image.bookmarkCount,
+            page = image.page,
+            fileName = `${userName} - ${illustTitle} - ${bookmarkCount} - p_${page}`,
+
+            returnObject = {
+                cacheKey: image.mangoImageCacheKey,
+                userId: image.userId,
+                url: image.downloadUrl,
+                filePath: `./images/${ keyword }/${ fileName }.${ type }`
+            };
+        return returnObject;
+    });
+    return finalMangoUrlArray;
+}
+
 async function startDownloadTask(sourceArray = []) {
     var taskArray = [],
         task_download = null,
@@ -474,6 +622,7 @@ async function startDownloadTask(sourceArray = []) {
         // 先檢查快取的原因是避免被randomDelay 拖到時間
         if (_eachImageDownloadedChecker(object.cacheKey) === object.url) {
 
+            // 檢查實際上有沒有那隻檔案
             // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
             if (fs.existsSync(object.filePath)) {
                 cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
