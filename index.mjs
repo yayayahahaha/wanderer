@@ -449,6 +449,8 @@ async function fetchSingleImagesUrl(singleArray) {
 async function fetchMangaImagesUrl(mangoArray) {
     var taskArray = [],
         task_mango = null,
+        cacheLog = [],
+        cacheArray = [],
         mangoPagesArray = [];
 
     // for (var i = 0; i < mangoArray.length; i++) {
@@ -461,17 +463,40 @@ async function fetchMangaImagesUrl(mangoArray) {
             illustTitle = mangoArray[i].illustTitle;
 
         for (var j = 0; j < pageCount; j++) {
-            var mangoImageCacheKey = `${userId} - ${id} - p_${j}`;
+            var mangoImageCacheKey = `${userId} - ${id} - p_${j}`,
+                cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][mangoImageCacheKey];
+
+            // 檢查cache
+            if (cacheObject) {
+                cacheLog.push(`圖片 ${ mangoImageCacheKey } 已經有快取，圖片資訊將從快取取得`);
+                cacheArray.push({
+                    status: 1,
+                    data: cacheObject,
+                    meta: cacheObject
+                });
+                continue;
+            }
+
             taskArray.push(_createReturnFunction(id, userId, userName, j, bookmarkCount, illustTitle, mangoImageCacheKey));
         }
     }
 
+    // 如果有些檔案是從cache 來的話要提示使用者
+    if (cacheLog.length !== 0) {
+        var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
+        console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+    }
+
     // 開始抓取真實連結
-    task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
-        randomDelay: 500
-    });
-    mangoPagesArray = await task_mango.doPromise();
-    fs.writeFileSync('./result.json', JSON.stringify(mangoPagesArray));
+    if (taskArray.length) {
+        console.log('');
+        task_mango = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+            randomDelay: 500
+        });
+        mangoPagesArray = await task_mango.doPromise();
+    }
+    mangoPagesArray = mangoPagesArray.concat(cacheArray);
 
     // 存進快取
     for (var i = 0; i < mangoPagesArray.length; i++) {
