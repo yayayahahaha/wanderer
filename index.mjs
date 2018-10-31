@@ -132,8 +132,20 @@ if (!fs.existsSync('./log/')) {
         // 取出漫畫圖檔頁面上的真實路徑"們"
         var mangoUrlArray = await fetchMangaImagesUrl(multipleArray),
             finalMangoUrlArray = createMangoPathAndName(mangoUrlArray);
-        console.log(finalMangoUrlArray);
-        console.log(finalMangoUrlArray.length);
+        console.log('取得多重圖片連結完畢');
+
+        console.log('');
+        console.log('開始下載');
+        var resultMango = await startDownloadTask(finalMangoUrlArray);
+
+        totalCount += result.length;
+        for (var i = 0; i < result.length; i++) {
+            if (result[i].status === 1) {
+                successCount++;
+            } else {
+                failedCount++;
+            }
+        }
     } else {
         console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
@@ -610,6 +622,7 @@ async function startDownloadTask(sourceArray = []) {
         // 先檢查快取的原因是避免被randomDelay 拖到時間
         if (_eachImageDownloadedChecker(object.cacheKey) === object.url) {
 
+            // 檢查實際上有沒有那隻檔案
             // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
             if (fs.existsSync(object.filePath)) {
                 cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
