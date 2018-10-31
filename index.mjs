@@ -110,31 +110,29 @@ if (!fs.existsSync('./log/')) {
         failedCount = 0;
 
     // 單一圖片的部分
-    /*
-        if (singlePageArray.length !== 0) {
-            // 取出該單一圖檔頁面上的真實路徑
-            var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
-                finalUrlArray = createPathAndName(singleUrlArray);
-            console.log('取得單一圖片連結完畢');
+    if (singlePageArray.length !== 0) {
+        // 取出該單一圖檔頁面上的真實路徑
+        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
+            finalUrlArray = createPathAndName(singleUrlArray);
+        console.log('取得單一圖片連結完畢');
 
-            console.log('');
-            console.log('開始下載: ');
-            var result = await startDownloadTask(finalUrlArray, 'medium');
+        console.log('');
+        console.log('開始下載: ');
+        var result = await startDownloadTask(finalUrlArray, 'medium');
 
-            // 這應該是最後了
-            totalCount += result.length;
-            for (var i = 0; i < result.length; i++) {
-                if (result[i].status === 1) {
-                    successCount++;
-                } else {
-                    failedCount++;
-                }
+        // 這應該是最後了
+        totalCount += result.length;
+        for (var i = 0; i < result.length; i++) {
+            if (result[i].status === 1) {
+                successCount++;
+            } else {
+                failedCount++;
             }
-
-        } else {
-            console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
         }
-    */
+
+    } else {
+        console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
+    }
 
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
