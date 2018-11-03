@@ -4,7 +4,8 @@
 // 快取的機制的改進：
 // 清除快取的指令，清除全部、清除部分等等的
 // 全域變數的減少使用，如cacheDirectory 或keyword 等
-// 此項完成就可以嘗試多重keyword 了
+// 還有模組化各個function 之類的
+// 完成就可以嘗試多重keyword 了
 
 import axios from 'axios';
 import fs from 'fs'
@@ -724,18 +725,3 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         });
     });
 }
-
-// TODO:
-// mkdir 的錯誤捕捉
-
-// 爬完之後，將要爬的id 依照作者分類
-// 這時就可以產生出作者對id 的單一key 了
-// 用來做快速比對的時候很好用
-// 接著再分成圖堆和單一圖片
-
-// 作者創資料夾
-// 圖堆創資料夾
-// 單圖也放在集中的資料夾
-
-// 不過這樣無法逐一檢視
-// 所以可能在整個掃完後再特別產一個列表處理這樣
