@@ -551,8 +551,8 @@ function createPathAndName(roughArray) {
             type = spliter[spliter.length - 1],
             userName = image.userName,
             illustTitle = image.illustTitle,
-            bookmarkCount = image.bookmarkCount,
-            fileName = `${ userName } - ${ illustTitle } - ${ bookmarkCount }`,
+            illustId = image.illustId,
+            fileName = `${ userName } - ${ illustTitle } - ${ illustId }`,
 
             returnObject = {
                 cacheKey: image.singleImageCacheKey,
@@ -571,9 +571,9 @@ function createMangoPathAndName(roughArray) {
             type = spliter[spliter.length - 1],
             userName = image.userName,
             illustTitle = image.illustTitle,
-            bookmarkCount = image.bookmarkCount,
+            illustId = image.illustId,
             page = image.page,
-            fileName = `${userName} - ${illustTitle} - ${bookmarkCount} - p_${page}`,
+            fileName = `${userName} - ${illustTitle} - ${illustId} - p_${page}`,
 
             returnObject = {
                 cacheKey: image.mangoImageCacheKey,
