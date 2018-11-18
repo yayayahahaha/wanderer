@@ -436,6 +436,9 @@ async function fetchSingleImagesUrl(singleArray) {
 }
 
 async function fetchMangaImagesUrl(mangoArray) {
+    console.log('');
+    console.log(`開始取得多重圖檔的各自連結`);
+
     var taskArray = [],
         task_mango = null,
         cacheLog = [],
