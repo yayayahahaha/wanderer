@@ -7,6 +7,11 @@
 // 還有模組化各個function 之類的
 // 完成就可以嘗試多重keyword 了
 
+// OTHERS TODO
+// 依作者分類
+// 計算作者總星星數和取出基本資訊
+// 作者排序
+
 import axios from 'axios';
 import fs from 'fs'
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
@@ -318,39 +323,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         singleArray,
         multipleArray
     };
-    // 底下的部分其實可以當做TODO
-
-    // 依作者分類
-    for (var i = 0; i < allImagesArray.length; i++) {
-        var eachImage = allImagesArray[i];
-        if (authorsObject[eachImage.userId]) {
-            authorsObject[eachImage.userId].push(eachImage);
-        } else {
-            authorsObject[eachImage.userId] = [eachImage];
-        }
-    }
-
-    // 計算作者總星星數和取出基本資訊
-    for (var author in authorsObject) {
-        var authorImages = authorsObject[author],
-            totalLikedNumber = _.sumBy(authorImages, 'bookmarkCount');
-
-        authorsObject[author] = {
-            userId: author,
-            userName: authorImages[0].userName,
-            totalLikedNumber: totalLikedNumber,
-            images: authorImages
-        };
-        authorArray.push(authorsObject[author]);
-    }
-
-    // 作者排序
-    authorArray.sort((a, b) => {
-        return b.totalLikedNumber - a.totalLikedNumber;
-    });
-
-    console.log(`images Number: ${ allImagesArray.length }`);
-    console.log(`author Number: ${ Object.keys(authorsObject).length }`);
 }
 
 async function fetchSingleImagesUrl(singleArray) {
