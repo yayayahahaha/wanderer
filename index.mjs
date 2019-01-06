@@ -23,7 +23,7 @@ import {
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
 // 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
-var currentSESSID = '35210002_11042cace126e0ec64e65f52291bb859';
+var currentSESSID = '';
 
 var keyword = '',
     page = 1,
@@ -95,9 +95,16 @@ if (!fs.existsSync('./log/')) {
     keyword = inputJSON.keyword;
     likedLevel = inputJSON.likedLevel ? inputJSON.likedLevel : 500;
     maxPage = inputJSON.maxPage ? inputJSON.maxPage : 0;
+    currentSESSID = inputJSON.SESSID;
 
     if (!keyword) {
         console.log('請在 input.json 檔裡輸入關鍵字');
+        console.log('');
+        return;
+    }
+    if (!currentSESSID) {
+        console.log('請在 input.json 檔裡輸入SESSID');
+        console.log('');
         return;
     }
 
