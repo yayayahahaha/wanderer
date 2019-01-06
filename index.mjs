@@ -271,10 +271,10 @@ async function firstSearch(url) {
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
     cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {}; // 這裡應該是部份更新的關鍵，可能要分成更新/ 強制更新/ 等等的
-    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
+    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory, null, 2));
 
     console.log(`產生的快取檔案為: ./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
-    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray));
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray, null, 2));
 
     return allPagesImagesArray;
 }
@@ -359,7 +359,7 @@ async function fetchSingleImagesUrl(singleArray) {
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
-        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog, null, 2));
     }
 
     if (taskArray.length !== 0) {
@@ -376,7 +376,7 @@ async function fetchSingleImagesUrl(singleArray) {
         var eachImage = singleImagesArray[i].data;
         cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.singleImageCacheKey] = eachImage;
     }
-    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory, null, 2));
 
 
     // 濾掉失敗的檔案後整理格式回傳
@@ -476,7 +476,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
-        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog, null, 2));
     }
 
     // 開始抓取真實連結
@@ -494,7 +494,7 @@ async function fetchMangaImagesUrl(mangoArray) {
         var eachImage = mangoPagesArray[i].data;
         cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.mangoImageCacheKey] = eachImage;
     }
-    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory, null, 2));
 
     // 濾掉失敗檔案
     mangoPagesArray = mangoPagesArray.filter((item) => {
@@ -621,7 +621,7 @@ async function startDownloadTask(sourceArray = [], mode) {
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.downloaded.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 ./log/${ cacheLogFileName }`);
-        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog, null, 2));
     }
 
     if (taskArray.length !== 0) {
@@ -630,7 +630,7 @@ async function startDownloadTask(sourceArray = [], mode) {
     }
 
     // 這裡應該已經完成了 : D
-    fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
+    fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory, null, 2));
     console.log('下載完畢');
     return result;
 
