@@ -234,7 +234,7 @@ async function firstSearch(url) {
     if (totalCount === 0) {
         console.log(`該搜尋關鍵字 ${ keyword } 找不到任何回傳結果`);
         console.log('程式結束');
-        return;
+        return [];
     }
 
     if (maxPage > 0) {
