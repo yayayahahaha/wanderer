@@ -4,7 +4,13 @@
 // 快取的機制的改進：
 // 清除快取的指令，清除全部、清除部分等等的
 // 全域變數的減少使用，如cacheDirectory 或keyword 等
-// 此項完成就可以嘗試多重keyword 了
+// 還有模組化各個function 之類的
+// 完成就可以嘗試多重keyword 了
+
+// OTHERS TODO
+// 依作者分類
+// 計算作者總星星數和取出基本資訊
+// 作者排序
 
 import axios from 'axios';
 import fs from 'fs'
@@ -17,7 +23,7 @@ import {
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
 // 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
-var currentSESSID = '35210002_6c906f649e5d8b6ee235d391a74dc10d';
+var currentSESSID = '';
 
 var keyword = '',
     page = 1,
@@ -89,9 +95,16 @@ if (!fs.existsSync('./log/')) {
     keyword = inputJSON.keyword;
     likedLevel = inputJSON.likedLevel ? inputJSON.likedLevel : 500;
     maxPage = inputJSON.maxPage ? inputJSON.maxPage : 0;
+    currentSESSID = inputJSON.SESSID;
 
     if (!keyword) {
         console.log('請在 input.json 檔裡輸入關鍵字');
+        console.log('');
+        return;
+    }
+    if (!currentSESSID) {
+        console.log('請在 input.json 檔裡輸入SESSID');
+        console.log('');
         return;
     }
 
@@ -221,7 +234,7 @@ async function firstSearch(url) {
     if (totalCount === 0) {
         console.log(`該搜尋關鍵字 ${ keyword } 找不到任何回傳結果`);
         console.log('程式結束');
-        return;
+        return [];
     }
 
     if (maxPage > 0) {
@@ -265,10 +278,10 @@ async function firstSearch(url) {
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
     cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {}; // 這裡應該是部份更新的關鍵，可能要分成更新/ 強制更新/ 等等的
-    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory));
+    fs.writeFileSync(`./cacheDirectory.json`, JSON.stringify(cacheDirectory, null, 2));
 
     console.log(`產生的快取檔案為: ./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`);
-    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray));
+    fs.writeFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`, JSON.stringify(allPagesImagesArray, null, 2));
 
     return allPagesImagesArray;
 }
@@ -317,39 +330,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         singleArray,
         multipleArray
     };
-    // 底下的部分其實可以當做TODO
-
-    // 依作者分類
-    for (var i = 0; i < allImagesArray.length; i++) {
-        var eachImage = allImagesArray[i];
-        if (authorsObject[eachImage.userId]) {
-            authorsObject[eachImage.userId].push(eachImage);
-        } else {
-            authorsObject[eachImage.userId] = [eachImage];
-        }
-    }
-
-    // 計算作者總星星數和取出基本資訊
-    for (var author in authorsObject) {
-        var authorImages = authorsObject[author],
-            totalLikedNumber = _.sumBy(authorImages, 'bookmarkCount');
-
-        authorsObject[author] = {
-            userId: author,
-            userName: authorImages[0].userName,
-            totalLikedNumber: totalLikedNumber,
-            images: authorImages
-        };
-        authorArray.push(authorsObject[author]);
-    }
-
-    // 作者排序
-    authorArray.sort((a, b) => {
-        return b.totalLikedNumber - a.totalLikedNumber;
-    });
-
-    console.log(`images Number: ${ allImagesArray.length }`);
-    console.log(`author Number: ${ Object.keys(authorsObject).length }`);
 }
 
 async function fetchSingleImagesUrl(singleArray) {
@@ -386,7 +366,7 @@ async function fetchSingleImagesUrl(singleArray) {
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
-        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog, null, 2));
     }
 
     if (taskArray.length !== 0) {
@@ -403,7 +383,7 @@ async function fetchSingleImagesUrl(singleArray) {
         var eachImage = singleImagesArray[i].data;
         cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.singleImageCacheKey] = eachImage;
     }
-    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory, null, 2));
 
 
     // 濾掉失敗的檔案後整理格式回傳
@@ -463,6 +443,9 @@ async function fetchSingleImagesUrl(singleArray) {
 }
 
 async function fetchMangaImagesUrl(mangoArray) {
+    console.log('');
+    console.log(`開始取得多重圖檔的各自連結`);
+
     var taskArray = [],
         task_mango = null,
         cacheLog = [],
@@ -500,7 +483,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.image_info.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 log/${ cacheLogFileName }`);
-        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog, null, 2));
     }
 
     // 開始抓取真實連結
@@ -518,7 +501,7 @@ async function fetchMangaImagesUrl(mangoArray) {
         var eachImage = mangoPagesArray[i].data;
         cacheDirectory[ORIGINAL_RESULT_FILE_NAME][eachImage.mangoImageCacheKey] = eachImage;
     }
-    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory));
+    fs.writeFileSync('./cacheDirectory.json', JSON.stringify(cacheDirectory, null, 2));
 
     // 濾掉失敗檔案
     mangoPagesArray = mangoPagesArray.filter((item) => {
@@ -578,8 +561,8 @@ function createPathAndName(roughArray) {
             type = spliter[spliter.length - 1],
             userName = image.userName,
             illustTitle = image.illustTitle,
-            bookmarkCount = image.bookmarkCount,
-            fileName = `${ userName } - ${ illustTitle } - ${ bookmarkCount }`,
+            illustId = image.illustId,
+            fileName = `${ userName } - ${ illustTitle } - ${ illustId }`,
 
             returnObject = {
                 cacheKey: image.singleImageCacheKey,
@@ -598,9 +581,9 @@ function createMangoPathAndName(roughArray) {
             type = spliter[spliter.length - 1],
             userName = image.userName,
             illustTitle = image.illustTitle,
-            bookmarkCount = image.bookmarkCount,
+            illustId = image.illustId,
             page = image.page,
-            fileName = `${userName} - ${illustTitle} - ${bookmarkCount} - p_${page}`,
+            fileName = `${userName} - ${illustTitle} - ${illustId} - p_${page}`,
 
             returnObject = {
                 cacheKey: image.mangoImageCacheKey,
@@ -645,7 +628,7 @@ async function startDownloadTask(sourceArray = [], mode) {
     if (cacheLog.length !== 0) {
         var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.downloaded.log.json`;
         console.log(`!!有部分檔案來源為快取，詳見 ./log/${ cacheLogFileName }`);
-        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog));
+        fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog, null, 2));
     }
 
     if (taskArray.length !== 0) {
@@ -654,7 +637,7 @@ async function startDownloadTask(sourceArray = [], mode) {
     }
 
     // 這裡應該已經完成了 : D
-    fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory));
+    fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory, null, 2));
     console.log('下載完畢');
     return result;
 
@@ -724,18 +707,3 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         });
     });
 }
-
-// TODO:
-// mkdir 的錯誤捕捉
-
-// 爬完之後，將要爬的id 依照作者分類
-// 這時就可以產生出作者對id 的單一key 了
-// 用來做快速比對的時候很好用
-// 接著再分成圖堆和單一圖片
-
-// 作者創資料夾
-// 圖堆創資料夾
-// 單圖也放在集中的資料夾
-
-// 不過這樣無法逐一檢視
-// 所以可能在整個掃完後再特別產一個列表處理這樣
