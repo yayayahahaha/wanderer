@@ -270,7 +270,7 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber, {
+    var task_search = new TaskSystem(taskArray, Math.ceil(taskArray.length / 16), {
         randomDelay: 500
     });
     var allPagesImagesArray = await task_search.doPromise();
