@@ -270,7 +270,7 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber, undefined, undefined, {
+    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber, {
         randomDelay: 500
     });
     var allPagesImagesArray = await task_search.doPromise();
@@ -371,7 +371,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+        task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, {
             randomDelay: 500
         });
         singleImagesArray = await task_SingleArray.doPromise();
@@ -489,7 +489,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        task_mango = new TaskSystem(taskArray, mangoArrayTaskNumber, undefined, undefined, {
+        task_mango = new TaskSystem(taskArray, mangoArrayTaskNumber, {
             randomDelay: 500
         });
         mangoPagesArray = await task_mango.doPromise();
