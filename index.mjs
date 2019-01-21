@@ -371,7 +371,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        task_SingleArray = new TaskSystem(taskArray, (taskArray.length / 4), {
+        task_SingleArray = new TaskSystem(taskArray, Math.ceil((taskArray.length / 4)), {
             randomDelay: 500
         });
         singleImagesArray = await task_SingleArray.doPromise();
@@ -489,7 +489,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        task_mango = new TaskSystem(taskArray, (taskArray.length / 4), {
+        task_mango = new TaskSystem(taskArray, Math.ceil((taskArray.length / 4)), {
             randomDelay: 500
         });
         mangoPagesArray = await task_mango.doPromise();
@@ -632,7 +632,7 @@ async function startDownloadTask(sourceArray = [], mode) {
     }
 
     if (taskArray.length !== 0) {
-        task_download = new TaskSystem(taskArray, (taskArray.length / 8));
+        task_download = new TaskSystem(taskArray, Math.ceil((taskArray.length / 8)));
         result = await task_download.doPromise();
     }
 
