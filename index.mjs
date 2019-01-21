@@ -93,8 +93,8 @@ if (!fs.existsSync('./log/')) {
         inputJSON = JSON.parse(contents);
 
     keyword = inputJSON.keyword;
-    likedLevel = inputJSON.likedLevel ? inputJSON.likedLevel : 500;
-    maxPage = inputJSON.maxPage ? inputJSON.maxPage : 0;
+    likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500;
+    maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0;
     currentSESSID = inputJSON.SESSID;
 
     if (!keyword) {
