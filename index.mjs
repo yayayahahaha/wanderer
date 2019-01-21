@@ -29,8 +29,8 @@ var keyword = '',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 100,
-    maxPage = 0,
+    likedLevel = 100, // 星星數
+    maxPage = 0, // 最大頁數
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
