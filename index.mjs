@@ -112,7 +112,6 @@ if (!fs.existsSync('./log/')) {
 
     // 取得該搜尋關鍵字的全部頁面
     var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page));
-    return;
 
     // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
     var {
@@ -148,6 +147,8 @@ if (!fs.existsSync('./log/')) {
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
+
+    return;
 
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
@@ -439,6 +440,7 @@ async function fetchSingleImagesUrl(singleArray) {
                     endIndex = res.indexOf('},user:'),
                     data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
                     returnObject = {
+                        pageUrl: url,
                         userId: data.userId,
                         userName: data.userName,
                         illustId: data.illustId,
