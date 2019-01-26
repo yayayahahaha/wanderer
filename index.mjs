@@ -679,7 +679,13 @@ async function startDownloadTask(sourceArray = [], {
             cacheKey = object.cacheKey;
 
         return function() {
-            return download(url, filePath, headers);
+            return download(url, filePath, headers, {
+                callback: function(status, cacheKey) {
+                    if (!status) return;
+                    cacheDirectory[ORIGINAL_RESULT_FILE_NAME][cacheKey].downloaded = url;
+                },
+                callbackParameter: cacheKey
+            });
         };
     }
 
@@ -729,6 +735,7 @@ function download(url, filePath, headers = {}, {
                 resolve(true);
             });
         }).catch((error) => {
+            console.log(error);
             callback(false, callbackParameter);
             reject([null, error]);
         });
