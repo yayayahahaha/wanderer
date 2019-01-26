@@ -584,10 +584,10 @@ function createPathAndName(roughArray) {
             userName = image.userName,
             illustTitle = image.illustTitle,
             illustId = image.illustId,
-            fileName = `${ userName }-${ illustTitle }-${ illustId }`,
+            fileName = `${ userName }-${ illustTitle }-${ illustId }`;
 
-            fileName = fileName.replace(/\//g, '_'); // 將可能存在的斜線變成底線
-            fileName = fileName.replace(/\s/g, '_'); // 將可能存在的空格也變成底線
+        fileName = fileName.replace(/\//g, '_'); // 將可能存在的斜線變成底線
+        fileName = fileName.replace(/\s/g, '_'); // 將可能存在的空格也變成底線
 
         var returnObject = {
             cacheKey: image.singleImageCacheKey,
@@ -691,7 +691,10 @@ async function startDownloadTask(sourceArray = [], {
     }
 }
 
-function download(url, filePath, headers = {}, callback = Function.prototype, setting = {}) {
+function download(url, filePath, headers = {}, {
+    callback = Function.prototype,
+    callbackParameter = undefined
+} = {}) {
     return new Promise(async (resolve, reject) => {
         // 濾掉尾巴的斜線
         if (/\/$/.test(filePath)) {
@@ -720,13 +723,13 @@ function download(url, filePath, headers = {}, callback = Function.prototype, se
         }).then(({
             data
         }) => {
-            callback(true, setting);
+            callback(true, callbackParameter);
             data.pipe(file);
             file.on('finish', () => {
                 resolve(true);
             });
         }).catch((error) => {
-            callback(false, setting);
+            callback(false, callbackParameter);
             reject([null, error]);
         });
     });
