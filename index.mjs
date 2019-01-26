@@ -198,10 +198,19 @@ async function firstSearch(url) {
     if (cacheDirectory[ORIGINAL_RESULT_FILE_NAME]) {
         console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
         console.log(`快取的值為: ${ ORIGINAL_RESULT_FILE_NAME }.json`);
-        var content = fs.readFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`),
-            allPagesImagesArray = JSON.parse(content);
 
-        return allPagesImagesArray;
+        var resultCacheName = `./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`;
+        if (fs.existsSync(resultCacheName)) {
+            var content = fs.readFileSync(),
+                allPagesImagesArray = JSON.parse(content);
+
+            return allPagesImagesArray;
+
+        } else {
+            console.log('');
+            console.log('!!: 雖然cacheDirectory 判別有快取，但找不到快取檔，將重新製作');
+            delete cacheDirectory[ORIGINAL_RESULT_FILE_NAME];
+        }
     }
 
     console.log(`實際搜尋的網址: ${url}`);
@@ -271,7 +280,6 @@ async function firstSearch(url) {
             });
         }
     }
-
 
     var taskNumber = Math.ceil(taskArray.length / 16),
         task_search = new TaskSystem(taskArray, taskNumber, {
