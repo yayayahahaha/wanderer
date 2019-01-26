@@ -111,13 +111,14 @@ if (!fs.existsSync('./log/')) {
     // 確認input 資料完畢，開始fetch
 
     // 取得該搜尋關鍵字的全部頁面
-    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
+    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page));
+    return;
 
-        // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
-        {
-            singleArray: singlePageArray,
-            multipleArray
-        } = formatAllPagesImagesArray(allPagesImagesArray),
+    // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
+    var {
+        singleArray: singlePageArray,
+        multipleArray
+    } = formatAllPagesImagesArray(allPagesImagesArray),
         totalCount = 0,
         successCount = 0,
         failedCount = 0;
