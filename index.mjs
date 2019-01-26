@@ -388,7 +388,8 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        task_SingleArray = new TaskSystem(taskArray, Math.ceil((taskArray.length / 4)), {
+        var taskNumber = Math.ceil(taskArray.length / 4);
+        task_SingleArray = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
         singleImagesArray = await task_SingleArray.doPromise();
