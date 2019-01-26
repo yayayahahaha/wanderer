@@ -61,7 +61,21 @@ var getSearchHeader = function() {
     getCacheFileName = function(keyword = 'pixiv', jsonEnd = false) {
         var base = `${ keyword.replace(/ /g, '_') }`;
         return jsonEnd ? `${ base }.json` : base;
-    };
+    },
+    taskNumberCreater = function(total, eachTaskWorksArray) {
+        var maxTaskNumber = 50;
+
+        for (var i = 0; i < eachTaskWorksArray.length; i++) {
+            var eachTaskWorkNumber = eachTaskWorksArray[i],
+                taskNumber = Math.ceil(total / eachTaskWorkNumber);
+
+            if (taskNumber <= maxTaskNumber) {
+                return taskNumber;
+            }
+        }
+
+        return maxTaskNumber;
+    }
 
 // TODO
 // 檢查是否存在的部分一定要做成library
@@ -287,10 +301,10 @@ async function firstSearch(url) {
         }
     }
 
-    var taskNumber = Math.ceil(taskArray.length / 16),
-        task_search = new TaskSystem(taskArray, taskNumber, {
-            randomDelay: 500
-        });
+    var taskNumber = taskNumberCreater(taskArray.length, [16]);
+    task_search = new TaskSystem(taskArray, taskNumber, {
+        randomDelay: 500
+    });
 
     var allPagesImagesArray = await task_search.doPromise();
 
@@ -390,7 +404,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        var taskNumber = Math.ceil(taskArray.length / 4);
+        var taskNumber = taskNumberCreater(taskArray.length, [4]);
         task_SingleArray = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
@@ -516,7 +530,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        var taskNumber = Math.ceil((taskArray.length / 4));
+        var taskNumber = taskNumberCreater(taskArray.length, [4]);
         task_mango = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
@@ -675,7 +689,7 @@ async function startDownloadTask(sourceArray = [], {
     }
 
     if (taskArray.length !== 0) {
-        var taskNumber = Math.ceil(((taskArray.length / 8) > 10 ? 10 : taskArray.length / 8))
+        var taskNumber = taskNumberCreater(taskArray.length, [4, 8, 16, 32]);
         task_download = new TaskSystem(taskArray, taskNumber);
         result = await task_download.doPromise();
     }
