@@ -599,8 +599,7 @@ function createPathAndName(roughArray) {
             illustId = image.illustId,
             fileName = `${ userName }-${ illustTitle }-${ illustId }`;
 
-        fileName = fileName.replace(/\//g, '_'); // 將可能存在的斜線變成底線
-        fileName = fileName.replace(/\s/g, '_'); // 將可能存在的空格也變成底線
+        fileName = fileName.replace(/\/|\.|\s/g, '_'); // 將可能存在的斜線和空格還有點變成底線
 
         var returnObject = {
             cacheKey: image.singleImageCacheKey,
@@ -621,14 +620,18 @@ function createMangoPathAndName(roughArray) {
             illustTitle = image.illustTitle,
             illustId = image.illustId,
             page = image.page,
-            fileName = `${userName} - ${illustTitle} - ${illustId} - p_${page}`,
+            fileName = '';
 
-            returnObject = {
-                cacheKey: image.mangoImageCacheKey,
-                userId: image.userId,
-                url: image.downloadUrl,
-                filePath: `./images/${ keyword }/${ fileName }.${ type }`
-            };
+        userName = userName.replace(/\s|\/|\./g, '_'); // 濾掉空白、斜線和點
+        illustTitle = illustTitle.replace(/\s|\/|\./g, '_'); // 濾掉空白、斜線和點
+        fileName = `${userName}-${illustTitle}/${illustId}-p_${page}`;
+
+        var returnObject = {
+            cacheKey: image.mangoImageCacheKey,
+            userId: image.userId,
+            url: image.downloadUrl,
+            filePath: `./images/${ keyword }/${ fileName }.${ type }`
+        };
         return returnObject;
     });
     return finalMangoUrlArray;
