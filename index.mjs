@@ -337,7 +337,7 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         singleArray = [],
         multipleArray = [];
 
-    allImagesArray.forEach.((image, index) => {
+    allImagesArray.forEach((image, index) => {
         if (image.pageCount === 1) {
             singleArray.push(image);
         } else if (image.pageCount !== 1) {
@@ -587,8 +587,9 @@ function createPathAndName(roughArray) {
             fileName = `${ userName }-${ illustTitle }-${ illustId }`,
 
             fileName = fileName.replace(/\//g, '_'); // 將可能存在的斜線變成底線
+            fileName = fileName.replace(/\s/g, '_'); // 將可能存在的空格也變成底線
 
-        returnObject = {
+        var returnObject = {
             cacheKey: image.singleImageCacheKey,
             userId: image.userId,
             url: image.downloadUrl,
@@ -629,25 +630,25 @@ async function startDownloadTask(sourceArray = [], {
         result = [];
 
     for (var i = 0; i < sourceArray.length; i++) {
-        var object = sourceArray[i];
+        var imageInfo = sourceArray[i];
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
-        if (_eachImageDownloadedChecker(object.cacheKey) === object.url) {
+        if (_eachImageDownloadedChecker(imageInfo.cacheKey) === imageInfo.url) {
 
             // 檢查實際上有沒有那隻檔案
             // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
-            if (fs.existsSync(object.filePath)) {
-                cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
+            if (fs.existsSync(imageInfo.filePath)) {
+                cacheLog.push(`已下載過 ${imageInfo.filePath}，不重複下載`);
                 result.push({
                     status: 1,
-                    data: `已下載過 ${object.filePath}，不重複下載`,
-                    meta: object
+                    data: `已下載過 ${imageInfo.filePath}，不重複下載`,
+                    meta: imageInfo
                 });
                 continue;
             }
         }
 
-        taskArray.push(_createReturnFunction(object));
+        taskArray.push(_createReturnFunction(imageInfo));
     }
 
     // 有檔案因為下載過而不重複下載時需提示使用者
@@ -678,15 +679,7 @@ async function startDownloadTask(sourceArray = [], {
             cacheKey = object.cacheKey;
 
         return function() {
-            download(url, filePath, headers, function(result, setting) {
-                if (result) {
-                    cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
-                }
-            }, {
-                cacheKey
-            }).catch(function(error) {
-                throw error;
-            })
+            return download(url, filePath, headers);
         };
     }
 
@@ -698,7 +691,7 @@ async function startDownloadTask(sourceArray = [], {
     }
 }
 
-async function download(url, filePath, headers = {}, callback = Function.prototype, setting = {}) {
+function download(url, filePath, headers = {}, callback = Function.prototype, setting = {}) {
     return new Promise(async (resolve, reject) => {
         // 濾掉尾巴的斜線
         if (/\/$/.test(filePath)) {
@@ -719,7 +712,7 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         }
 
         var file = fs.createWriteStream(filePath);
-        await axios({
+        axios({
             method: 'get',
             url: url,
             responseType: 'stream',
