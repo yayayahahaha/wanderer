@@ -29,8 +29,8 @@ var keyword = '',
     page = 1,
     totalPages = null,
     totalCount = null,
-    likedLevel = 100,
-    maxPage = 0,
+    likedLevel = 100, // 星星數
+    maxPage = 0, // 最大頁數
     ORIGINAL_RESULT_FILE_NAME = null,
     cacheDirectory = {};
 
@@ -93,8 +93,8 @@ if (!fs.existsSync('./log/')) {
         inputJSON = JSON.parse(contents);
 
     keyword = inputJSON.keyword;
-    likedLevel = inputJSON.likedLevel ? inputJSON.likedLevel : 500;
-    maxPage = inputJSON.maxPage ? inputJSON.maxPage : 0;
+    likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500;
+    maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0;
     currentSESSID = inputJSON.SESSID;
 
     if (!keyword) {
@@ -270,7 +270,7 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, firstSearchTaskNumber, undefined, undefined, {
+    var task_search = new TaskSystem(taskArray, Math.ceil(taskArray.length / 16), {
         randomDelay: 500
     });
     var allPagesImagesArray = await task_search.doPromise();
@@ -371,7 +371,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        task_SingleArray = new TaskSystem(taskArray, singleArrayTaskNumber, undefined, undefined, {
+        task_SingleArray = new TaskSystem(taskArray, Math.ceil((taskArray.length / 4)), {
             randomDelay: 500
         });
         singleImagesArray = await task_SingleArray.doPromise();
@@ -489,7 +489,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        task_mango = new TaskSystem(taskArray, mangoArrayTaskNumber, undefined, undefined, {
+        task_mango = new TaskSystem(taskArray, Math.ceil((taskArray.length / 4)), {
             randomDelay: 500
         });
         mangoPagesArray = await task_mango.doPromise();
@@ -632,7 +632,8 @@ async function startDownloadTask(sourceArray = [], mode) {
     }
 
     if (taskArray.length !== 0) {
-        task_download = new TaskSystem(taskArray, downloadTaskNumber);
+        var taskNumber = Math.ceil(((taskArray.length / 8) > 10 ? 10 : taskArray.length / 8))
+        task_download = new TaskSystem(taskArray, taskNumber);
         result = await task_download.doPromise();
     }
 
@@ -650,13 +651,17 @@ async function startDownloadTask(sourceArray = [], mode) {
             headers = getSinegleHeader(userId, mode),
             cacheKey = object.cacheKey;
 
-        return download(url, filePath, headers, function(result, setting) {
-            if (result) {
-                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
-            }
-        }, {
-            cacheKey
-        });
+        return function() {
+            download(url, filePath, headers, function(result, setting) {
+                if (result) {
+                    cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
+                }
+            }, {
+                cacheKey
+            }).catch(function(error) {
+                throw error;
+            })
+        };
     }
 
     function _eachImageDownloadedChecker(cacheKey) {
