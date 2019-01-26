@@ -118,8 +118,9 @@ if (!fs.existsSync('./log/')) {
     var {
         singleArray: singlePageArray,
         multipleArray
-    } = formatAllPagesImagesArray(allPagesImagesArray),
-        totalCount = 0,
+    } = formatAllPagesImagesArray(allPagesImagesArray);
+
+    var totalCount = 0,
         successCount = 0,
         failedCount = 0;
 
@@ -288,6 +289,8 @@ async function firstSearch(url) {
 
     var allPagesImagesArray = await task_search.doPromise();
 
+    console.log(JSON.stringify(allPagesImagesArray));
+
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
     cacheDirectory[ORIGINAL_RESULT_FILE_NAME] = {}; // 這裡應該是部份更新的關鍵，可能要分成更新/ 強制更新/ 等等的
@@ -317,7 +320,8 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     var allImagesArray = _.chain(allPagesImagesArray)
         .flattenDepth(1)
         .filter((image) => {
-            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
+            // 目前無法解析動圖，image.illustType 是 2 的話就是動圖
+            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; 
         })
         .uniqBy('illustId')
         .sort((a, b) => {
