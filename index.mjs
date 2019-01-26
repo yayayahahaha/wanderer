@@ -161,7 +161,9 @@ if (!fs.existsSync('./log/')) {
 
         console.log('');
         console.log('開始下載');
-        var resultMango = await startDownloadTask(finalMangoUrlArray, 'manga_big');
+        var resultMango = await startDownloadTask(finalMangoUrlArray, {
+            mode: 'manga_big'
+        });
 
         totalCount += resultMango.length;
         for (var i = 0; i < resultMango.length; i++) {
@@ -291,8 +293,6 @@ async function firstSearch(url) {
         });
 
     var allPagesImagesArray = await task_search.doPromise();
-
-    console.log(JSON.stringify(allPagesImagesArray));
 
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
