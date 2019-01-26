@@ -325,6 +325,7 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         })
         .uniqBy('illustId')
         .sort((a, b) => {
+            // 依照星星數、使用者id 和圖片id 的順序排列
             return a['bookmarkCount'].toString().localeCompare(b['bookmarkCount'].toString()) ||
                 a['userId'].toString().localeCompare(b['userId'].toString()) ||
                 a['illustId'].toString().localeCompare(b['illustId'].toString());
