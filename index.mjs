@@ -111,14 +111,15 @@ if (!fs.existsSync('./log/')) {
     // 確認input 資料完畢，開始fetch
 
     // 取得該搜尋關鍵字的全部頁面
-    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page)),
+    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page));
 
-        // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
-        {
-            singleArray: singlePageArray,
-            multipleArray
-        } = formatAllPagesImagesArray(allPagesImagesArray),
-        totalCount = 0,
+    // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
+    var {
+        singleArray: singlePageArray,
+        multipleArray
+    } = formatAllPagesImagesArray(allPagesImagesArray);
+
+    var totalCount = 0,
         successCount = 0,
         failedCount = 0;
 
@@ -131,7 +132,9 @@ if (!fs.existsSync('./log/')) {
 
         console.log('');
         console.log('開始下載: ');
-        var result = await startDownloadTask(finalUrlArray, 'medium');
+        var result = await startDownloadTask(finalUrlArray, {
+            mode: 'medium' // 用來產header
+        });
 
         // 這應該是最後了
         totalCount += result.length;
@@ -146,6 +149,8 @@ if (!fs.existsSync('./log/')) {
     } else {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
+
+    return;
 
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
@@ -197,10 +202,19 @@ async function firstSearch(url) {
     if (cacheDirectory[ORIGINAL_RESULT_FILE_NAME]) {
         console.log('目前的搜尋資訊已有過快取，將使用快取進行解析: ');
         console.log(`快取的值為: ${ ORIGINAL_RESULT_FILE_NAME }.json`);
-        var content = fs.readFileSync(`./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`),
-            allPagesImagesArray = JSON.parse(content);
 
-        return allPagesImagesArray;
+        var resultCacheName = `./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`;
+        if (fs.existsSync(resultCacheName)) {
+            var content = fs.readFileSync(resultCacheName),
+                allPagesImagesArray = JSON.parse(content);
+
+            return allPagesImagesArray;
+
+        } else {
+            console.log('');
+            console.log('!!: 雖然cacheDirectory 判別有快取，但找不到快取檔，將重新製作');
+            delete cacheDirectory[ORIGINAL_RESULT_FILE_NAME];
+        }
     }
 
     console.log(`實際搜尋的網址: ${url}`);
@@ -271,13 +285,14 @@ async function firstSearch(url) {
         }
     }
 
-
     var taskNumber = Math.ceil(taskArray.length / 16),
         task_search = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
 
     var allPagesImagesArray = await task_search.doPromise();
+
+    console.log(JSON.stringify(allPagesImagesArray));
 
     console.log('');
     console.log('將快取資訊寫入cacheDirectory.json');
@@ -308,21 +323,21 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
     var allImagesArray = _.chain(allPagesImagesArray)
         .flattenDepth(1)
         .filter((image) => {
-            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; // 目前無法解析動圖
+            // 目前無法解析動圖，image.illustType 是 2 的話就是動圖
+            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2;
         })
         .uniqBy('illustId')
         .sort((a, b) => {
+            // 依照星星數、使用者id 和圖片id 的順序排列
             return a['bookmarkCount'].toString().localeCompare(b['bookmarkCount'].toString()) ||
                 a['userId'].toString().localeCompare(b['userId'].toString()) ||
                 a['illustId'].toString().localeCompare(b['illustId'].toString());
         })
         .value(),
-        authorsObject = {},
-        authorArray = [],
         singleArray = [],
         multipleArray = [];
 
-    [].forEach.call(allImagesArray, (image, index) => {
+    allImagesArray.forEach((image, index) => {
         if (image.pageCount === 1) {
             singleArray.push(image);
         } else if (image.pageCount !== 1) {
@@ -375,7 +390,8 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        task_SingleArray = new TaskSystem(taskArray, Math.ceil((taskArray.length / 4)), {
+        var taskNumber = Math.ceil(taskArray.length / 4);
+        task_SingleArray = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
         singleImagesArray = await task_SingleArray.doPromise();
@@ -427,6 +443,7 @@ async function fetchSingleImagesUrl(singleArray) {
                     endIndex = res.indexOf('},user:'),
                     data = JSON.parse(res.slice(startIndex + illust_id_length + 2, endIndex)),
                     returnObject = {
+                        pageUrl: url,
                         userId: data.userId,
                         userName: data.userName,
                         illustId: data.illustId,
@@ -560,20 +577,24 @@ async function fetchMangaImagesUrl(mangoArray) {
 }
 
 function createPathAndName(roughArray) {
-    var finalUrlArray = roughArray.slice().map((image) => {
-        var spliter = image.downloadUrl.split('.'),
-            type = spliter[spliter.length - 1],
+    var finalUrlArray = [...roughArray].map((image) => {
+        var spliter = image.downloadUrl.split('.'), // 取得最後的副檔名
+            type = spliter[spliter.length - 1], // 由於中間也可能有 . ，所以要用最後一個
+
             userName = image.userName,
             illustTitle = image.illustTitle,
             illustId = image.illustId,
-            fileName = `${ userName } - ${ illustTitle } - ${ illustId }`,
+            fileName = `${ userName }-${ illustTitle }-${ illustId }`;
 
-            returnObject = {
-                cacheKey: image.singleImageCacheKey,
-                userId: image.userId,
-                url: image.downloadUrl,
-                filePath: `./images/${ keyword }/${ fileName }.${ type }`
-            };
+        fileName = fileName.replace(/\//g, '_'); // 將可能存在的斜線變成底線
+        fileName = fileName.replace(/\s/g, '_'); // 將可能存在的空格也變成底線
+
+        var returnObject = {
+            cacheKey: image.singleImageCacheKey,
+            userId: image.userId,
+            url: image.downloadUrl,
+            filePath: `./images/${ keyword }/${ fileName }.${ type }`
+        };
         return returnObject;
     });
     return finalUrlArray;
@@ -600,32 +621,34 @@ function createMangoPathAndName(roughArray) {
     return finalMangoUrlArray;
 }
 
-async function startDownloadTask(sourceArray = [], mode) {
+async function startDownloadTask(sourceArray = [], {
+    mode
+}) {
     var taskArray = [],
         task_download = null,
         cacheLog = [],
         result = [];
 
     for (var i = 0; i < sourceArray.length; i++) {
-        var object = sourceArray[i];
+        var imageInfo = sourceArray[i];
 
         // 先檢查快取的原因是避免被randomDelay 拖到時間
-        if (_eachImageDownloadedChecker(object.cacheKey) === object.url) {
+        if (_eachImageDownloadedChecker(imageInfo.cacheKey) === imageInfo.url) {
 
             // 檢查實際上有沒有那隻檔案
             // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
-            if (fs.existsSync(object.filePath)) {
-                cacheLog.push(`已下載過 ${object.filePath}，不重複下載`);
+            if (fs.existsSync(imageInfo.filePath)) {
+                cacheLog.push(`已下載過 ${imageInfo.filePath}，不重複下載`);
                 result.push({
                     status: 1,
-                    data: `已下載過 ${object.filePath}，不重複下載`,
-                    meta: object
+                    data: `已下載過 ${imageInfo.filePath}，不重複下載`,
+                    meta: imageInfo
                 });
                 continue;
             }
         }
 
-        taskArray.push(_createReturnFunction(object));
+        taskArray.push(_createReturnFunction(imageInfo));
     }
 
     // 有檔案因為下載過而不重複下載時需提示使用者
@@ -656,15 +679,13 @@ async function startDownloadTask(sourceArray = [], mode) {
             cacheKey = object.cacheKey;
 
         return function() {
-            download(url, filePath, headers, function(result, setting) {
-                if (result) {
-                    cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
-                }
-            }, {
-                cacheKey
-            }).catch(function(error) {
-                throw error;
-            })
+            return download(url, filePath, headers, {
+                callback: function(status, cacheKey) {
+                    if (!status) return;
+                    cacheDirectory[ORIGINAL_RESULT_FILE_NAME][cacheKey].downloaded = url;
+                },
+                callbackParameter: cacheKey
+            });
         };
     }
 
@@ -676,7 +697,10 @@ async function startDownloadTask(sourceArray = [], mode) {
     }
 }
 
-async function download(url, filePath, headers = {}, callback = Function.prototype, setting = {}) {
+function download(url, filePath, headers = {}, {
+    callback = Function.prototype,
+    callbackParameter = undefined
+} = {}) {
     return new Promise(async (resolve, reject) => {
         // 濾掉尾巴的斜線
         if (/\/$/.test(filePath)) {
@@ -697,7 +721,7 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         }
 
         var file = fs.createWriteStream(filePath);
-        await axios({
+        axios({
             method: 'get',
             url: url,
             responseType: 'stream',
@@ -705,13 +729,14 @@ async function download(url, filePath, headers = {}, callback = Function.prototy
         }).then(({
             data
         }) => {
-            callback(true, setting);
+            callback(true, callbackParameter);
             data.pipe(file);
             file.on('finish', () => {
                 resolve(true);
             });
         }).catch((error) => {
-            callback(false, setting);
+            console.log(error);
+            callback(false, callbackParameter);
             reject([null, error]);
         });
     });
