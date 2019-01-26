@@ -251,6 +251,7 @@ async function firstSearch(url) {
         taskArray.push(_createReturnFunction(i));
     }
 
+    // 必須回傳一個執行結果是promise 的function
     function _createReturnFunction(number) {
         var url = getSearchUrl(keyword, number);
         return function() {
