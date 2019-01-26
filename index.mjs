@@ -321,7 +321,7 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         .flattenDepth(1)
         .filter((image) => {
             // 目前無法解析動圖，image.illustType 是 2 的話就是動圖
-            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2; 
+            return image.bookmarkCount >= likedLevel && parseInt(image.illustType, 10) !== 2;
         })
         .uniqBy('illustId')
         .sort((a, b) => {
@@ -334,7 +334,7 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
         singleArray = [],
         multipleArray = [];
 
-    [].forEach.call(allImagesArray, (image, index) => {
+    allImagesArray.forEach.((image, index) => {
         if (image.pageCount === 1) {
             singleArray.push(image);
         } else if (image.pageCount !== 1) {
