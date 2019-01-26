@@ -331,8 +331,6 @@ function formatAllPagesImagesArray(allPagesImagesArray) {
                 a['illustId'].toString().localeCompare(b['illustId'].toString());
         })
         .value(),
-        authorsObject = {},
-        authorArray = [],
         singleArray = [],
         multipleArray = [];
 
