@@ -218,7 +218,7 @@ async function firstSearch(url) {
         return [null, error];
     });
     if (error) {
-        console.log('發生錯誤了');
+        console.log('取得第一次的搜尋結果發生錯誤了');
         console.log(error.response.statusText);
         return;
     }
