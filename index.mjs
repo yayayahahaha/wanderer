@@ -132,7 +132,9 @@ if (!fs.existsSync('./log/')) {
 
         console.log('');
         console.log('開始下載: ');
-        var result = await startDownloadTask(finalUrlArray, 'medium');
+        var result = await startDownloadTask(finalUrlArray, {
+            mode: 'medium' // 用來產header
+        });
 
         // 這應該是最後了
         totalCount += result.length;
@@ -586,12 +588,12 @@ function createPathAndName(roughArray) {
 
             fileName = fileName.replace(/\//g, '_'); // 將可能存在的斜線變成底線
 
-            returnObject = {
-                cacheKey: image.singleImageCacheKey,
-                userId: image.userId,
-                url: image.downloadUrl,
-                filePath: `./images/${ keyword }/${ fileName }.${ type }`
-            };
+        returnObject = {
+            cacheKey: image.singleImageCacheKey,
+            userId: image.userId,
+            url: image.downloadUrl,
+            filePath: `./images/${ keyword }/${ fileName }.${ type }`
+        };
         return returnObject;
     });
     return finalUrlArray;
@@ -618,7 +620,9 @@ function createMangoPathAndName(roughArray) {
     return finalMangoUrlArray;
 }
 
-async function startDownloadTask(sourceArray = [], mode) {
+async function startDownloadTask(sourceArray = [], {
+    mode
+}) {
     var taskArray = [],
         task_download = null,
         cacheLog = [],
