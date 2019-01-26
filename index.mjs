@@ -201,7 +201,7 @@ async function firstSearch(url) {
 
         var resultCacheName = `./cache/${ ORIGINAL_RESULT_FILE_NAME }.json`;
         if (fs.existsSync(resultCacheName)) {
-            var content = fs.readFileSync(),
+            var content = fs.readFileSync(resultCacheName),
                 allPagesImagesArray = JSON.parse(content);
 
             return allPagesImagesArray;
