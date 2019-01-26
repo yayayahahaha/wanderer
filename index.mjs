@@ -632,7 +632,8 @@ async function startDownloadTask(sourceArray = [], mode) {
     }
 
     if (taskArray.length !== 0) {
-        task_download = new TaskSystem(taskArray, Math.ceil((taskArray.length / 8)));
+        var taskNumber = Math.ceil(((taskArray.length / 8) > 10 ? 10 : taskArray.length / 8))
+        task_download = new TaskSystem(taskArray, taskNumber);
         result = await task_download.doPromise();
     }
 
@@ -650,13 +651,17 @@ async function startDownloadTask(sourceArray = [], mode) {
             headers = getSinegleHeader(userId, mode),
             cacheKey = object.cacheKey;
 
-        return download(url, filePath, headers, function(result, setting) {
-            if (result) {
-                cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
-            }
-        }, {
-            cacheKey
-        });
+        return function() {
+            download(url, filePath, headers, function(result, setting) {
+                if (result) {
+                    cacheDirectory[ORIGINAL_RESULT_FILE_NAME][setting.cacheKey].downloaded = url;
+                }
+            }, {
+                cacheKey
+            }).catch(function(error) {
+                throw error;
+            })
+        };
     }
 
     function _eachImageDownloadedChecker(cacheKey) {
