@@ -301,10 +301,10 @@ async function firstSearch(url) {
         }
     }
 
-    var taskNumber = taskNumberCreater(taskArray.length, [16]);
-    task_search = new TaskSystem(taskArray, taskNumber, {
-        randomDelay: 500
-    });
+    var taskNumber = taskNumberCreater(taskArray.length, [16]),
+        task_search = new TaskSystem(taskArray, taskNumber, {
+            randomDelay: 500
+        });
 
     var allPagesImagesArray = await task_search.doPromise();
 
@@ -404,10 +404,10 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        var taskNumber = taskNumberCreater(taskArray.length, [4]);
-        task_SingleArray = new TaskSystem(taskArray, taskNumber, {
-            randomDelay: 500
-        });
+        var taskNumber = taskNumberCreater(taskArray.length, [4]),
+            task_SingleArray = new TaskSystem(taskArray, taskNumber, {
+                randomDelay: 500
+            });
         singleImagesArray = await task_SingleArray.doPromise();
     }
     singleImagesArray = singleImagesArray.concat(cacheArray); //補回從cache 來的數量
@@ -530,10 +530,10 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        var taskNumber = taskNumberCreater(taskArray.length, [4]);
-        task_mango = new TaskSystem(taskArray, taskNumber, {
-            randomDelay: 500
-        });
+        var taskNumber = taskNumberCreater(taskArray.length, [4]),
+            task_mango = new TaskSystem(taskArray, taskNumber, {
+                randomDelay: 500
+            });
         mangoPagesArray = await task_mango.doPromise();
     }
     mangoPagesArray = mangoPagesArray.concat(cacheArray);
@@ -689,8 +689,8 @@ async function startDownloadTask(sourceArray = [], {
     }
 
     if (taskArray.length !== 0) {
-        var taskNumber = taskNumberCreater(taskArray.length, [4, 8, 16, 32]);
-        task_download = new TaskSystem(taskArray, taskNumber);
+        var taskNumber = taskNumberCreater(taskArray.length, [4, 8, 16, 32]),
+            task_download = new TaskSystem(taskArray, taskNumber);
         result = await task_download.doPromise();
     }
 
