@@ -124,35 +124,33 @@ if (!fs.existsSync('./log/')) {
         failedCount = 0;
 
     // 單一圖片的部分
-/*
-    if (singlePageArray.length !== 0) {
-        // 取出該單一圖檔頁面上的真實路徑
-        var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
-            finalUrlArray = createPathAndName(singleUrlArray);
-        console.log('取得單一圖片連結完畢');
+    /*
+        if (singlePageArray.length !== 0) {
+            // 取出該單一圖檔頁面上的真實路徑
+            var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
+                finalUrlArray = createPathAndName(singleUrlArray);
+            console.log('取得單一圖片連結完畢');
 
-        console.log('');
-        console.log('開始下載: ');
-        var result = await startDownloadTask(finalUrlArray, {
-            mode: 'medium' // 用來產header
-        });
+            console.log('');
+            console.log('開始下載: ');
+            var result = await startDownloadTask(finalUrlArray, {
+                mode: 'medium' // 用來產header
+            });
 
-        // 這應該是最後了
-        totalCount += result.length;
-        for (var i = 0; i < result.length; i++) {
-            if (result[i].status === 1) {
-                successCount++;
-            } else {
-                failedCount++;
+            // 這應該是最後了
+            totalCount += result.length;
+            for (var i = 0; i < result.length; i++) {
+                if (result[i].status === 1) {
+                    successCount++;
+                } else {
+                    failedCount++;
+                }
             }
+
+        } else {
+            console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
         }
-
-    } else {
-        console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
-    }
-*/
-
-    return;
+    */
 
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
@@ -476,15 +474,15 @@ async function fetchMangaImagesUrl(mangoArray) {
         mangoPagesArray = [];
 
     for (var i = 0; i < mangoArray.length; i++) {
-        var id = mangoArray[i].illustId,
+        var illustId = mangoArray[i].illustId,
             userId = mangoArray[i].userId,
             userName = mangoArray[i].userName,
             pageCount = mangoArray[i].pageCount,
             bookmarkCount = mangoArray[i].bookmarkCount,
             illustTitle = mangoArray[i].illustTitle;
 
-        for (var j = 0; j < pageCount; j++) {
-            var mangoImageCacheKey = `${userId} - ${id} - p_${j}`,
+        for (var pageNumber = 0; pageNumber < pageCount; pageNumber++) {
+            var mangoImageCacheKey = `${userId}-${illustId}-page-${pageNumber}`,
                 cacheObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME][mangoImageCacheKey];
 
             // 檢查cache
@@ -498,7 +496,13 @@ async function fetchMangaImagesUrl(mangoArray) {
                 continue;
             }
 
-            taskArray.push(_createReturnFunction(id, userId, userName, j, bookmarkCount, illustTitle, mangoImageCacheKey));
+            taskArray.push(_createReturnFunction(illustId, pageNumber, {
+                userId,
+                userName,
+                bookmarkCount,
+                illustTitle,
+                mangoImageCacheKey
+            }));
         }
     }
 
@@ -512,7 +516,8 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        task_mango = new TaskSystem(taskArray, Math.ceil((taskArray.length / 4)), {
+        var taskNumber = Math.ceil((taskArray.length / 4));
+        task_mango = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
         mangoPagesArray = await task_mango.doPromise();
@@ -548,8 +553,14 @@ async function fetchMangaImagesUrl(mangoArray) {
         .value();
     return mangoPagesArray;
 
-    function _createReturnFunction(id, userId, userName, page, bookmarkCount, illustTitle, mangoImageCacheKey) {
-        var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ id }&page=${ page }`,
+    function _createReturnFunction(illustId, page, {
+        userId,
+        userName,
+        bookmarkCount,
+        illustTitle,
+        mangoImageCacheKey
+    }) {
+        var url = `https://www.pixiv.net/member_illust.php?mode=manga_big&illust_id=${ illustId }&page=${ page }`,
             headers = Object.assign(getSinegleHeader(userId), getSearchHeader());
         return function() {
             return axios({
@@ -563,7 +574,7 @@ async function fetchMangaImagesUrl(mangoArray) {
 
                 return {
                     downloadUrl,
-                    illustId: id,
+                    illustId,
                     userId,
                     userName,
                     page,
