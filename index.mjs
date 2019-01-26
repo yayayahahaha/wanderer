@@ -271,9 +271,12 @@ async function firstSearch(url) {
         }
     }
 
-    var task_search = new TaskSystem(taskArray, Math.ceil(taskArray.length / 16), {
-        randomDelay: 500
-    });
+
+    var taskNumber = Math.ceil(taskArray.length / 16),
+        task_search = new TaskSystem(taskArray, taskNumber, {
+            randomDelay: 500
+        });
+
     var allPagesImagesArray = await task_search.doPromise();
 
     console.log('');
