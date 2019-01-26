@@ -575,13 +575,16 @@ async function fetchMangaImagesUrl(mangoArray) {
 }
 
 function createPathAndName(roughArray) {
-    var finalUrlArray = roughArray.slice().map((image) => {
-        var spliter = image.downloadUrl.split('.'),
-            type = spliter[spliter.length - 1],
+    var finalUrlArray = [...roughArray].map((image) => {
+        var spliter = image.downloadUrl.split('.'), // 取得最後的副檔名
+            type = spliter[spliter.length - 1], // 由於中間也可能有 . ，所以要用最後一個
+
             userName = image.userName,
             illustTitle = image.illustTitle,
             illustId = image.illustId,
-            fileName = `${ userName } - ${ illustTitle } - ${ illustId }`,
+            fileName = `${ userName }-${ illustTitle }-${ illustId }`,
+
+            fileName = fileName.replace(/\//g, '_'); // 將可能存在的斜線變成底線
 
             returnObject = {
                 cacheKey: image.singleImageCacheKey,
