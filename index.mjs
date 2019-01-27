@@ -62,18 +62,14 @@ var getSearchHeader = function() {
         var base = `${ keyword.replace(/ /g, '_') }`;
         return jsonEnd ? `${ base }.json` : base;
     },
-    taskNumberCreater = function(total, eachTaskWorksArray) {
-        var maxTaskNumber = 50;
+    taskNumberCreater = function(total, maxTaskNumber) {
+        maxTaskNumber = maxTaskNumber ? maxTaskNumber : 50;
 
-        for (var i = 0; i < eachTaskWorksArray.length; i++) {
-            var eachTaskWorkNumber = eachTaskWorksArray[i],
-                taskNumber = Math.ceil(total / eachTaskWorkNumber);
-
-            if (taskNumber <= maxTaskNumber) {
-                return taskNumber;
-            }
+        var numberArray = new Array(Math.pow(2, 20)).fill().map((item, index) => index + 1);
+        for (var i = 0; i < numberArray.length; i++) {
+            var eachTaskWorksNumber = Math.ceil(total / numberArray[i]);
+            if (eachTaskWorksNumber <= maxTaskNumber) return eachTaskWorksNumber;
         }
-
         return maxTaskNumber;
     }
 
@@ -301,7 +297,7 @@ async function firstSearch(url) {
         }
     }
 
-    var taskNumber = taskNumberCreater(taskArray.length, [16]),
+    var taskNumber = taskNumberCreater(taskArray.length, 32),
         task_search = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
@@ -404,7 +400,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        var taskNumber = taskNumberCreater(taskArray.length, [4]),
+        var taskNumber = taskNumberCreater(taskArray.length, 32),
             task_SingleArray = new TaskSystem(taskArray, taskNumber, {
                 randomDelay: 500
             });
@@ -530,7 +526,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        var taskNumber = taskNumberCreater(taskArray.length, [4]),
+        var taskNumber = taskNumberCreater(taskArray.length, 32),
             task_mango = new TaskSystem(taskArray, taskNumber, {
                 randomDelay: 500
             });
@@ -689,7 +685,7 @@ async function startDownloadTask(sourceArray = [], {
     }
 
     if (taskArray.length !== 0) {
-        var taskNumber = taskNumberCreater(taskArray.length, [4, 8, 16, 32]),
+        var taskNumber = taskNumberCreater(taskArray.length, 32),
             task_download = new TaskSystem(taskArray, taskNumber);
         result = await task_download.doPromise();
     }
