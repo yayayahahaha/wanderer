@@ -64,6 +64,19 @@ var getSearchHeader = function() {
         return jsonEnd ? `${ base }.json` : base;
     },
     taskNumberCreater = function(total, maxTaskNumber) {
+        var cpus = os.cpus(),
+            cpuIdle = cpus.reduce(function(cardinalNumber, cpu) {
+                var total = 0;
+                for (var item in cpu.times) {
+                    total += cpu.times[item];
+                }
+                return cardinalNumber + (cpu.times.idle * 100 / total);
+            }, 0);
+
+        console.log('');
+        console.log(cpuIdle);
+        console.log('');
+
         maxTaskNumber = maxTaskNumber ? maxTaskNumber : 50;
 
         var numberArray = new Array(Math.pow(2, 20)).fill().map((item, index) => index + 1);
