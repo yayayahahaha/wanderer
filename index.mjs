@@ -14,6 +14,7 @@
 
 import axios from 'axios';
 import fs from 'fs'
+import os from 'os';
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import _ from 'lodash';
 import {
@@ -62,15 +63,22 @@ var getSearchHeader = function() {
         var base = `${ keyword.replace(/ /g, '_') }`;
         return jsonEnd ? `${ base }.json` : base;
     },
-    taskNumberCreater = function(total, maxTaskNumber) {
-        maxTaskNumber = maxTaskNumber ? maxTaskNumber : 50;
+    taskNumberCreater = function() {
+        var cpus = os.cpus(),
+            cpusAmount = cpus.length,
+            cpuSpec = cpus.reduce(function(cardinalNumber, cpu) {
+                var total = 0;
+                for (var item in cpu.times) {
+                    total += cpu.times[item];
+                }
+                return cardinalNumber + (cpu.times.idle * 100 / total);
+            }, 0) / cpusAmount;
 
-        var numberArray = new Array(Math.pow(2, 20)).fill().map((item, index) => index + 1);
-        for (var i = 0; i < numberArray.length; i++) {
-            var eachTaskWorksNumber = Math.ceil(total / numberArray[i]);
-            if (eachTaskWorksNumber <= maxTaskNumber) return eachTaskWorksNumber;
-        }
-        return maxTaskNumber;
+        var memory = os.freemem() / Math.pow(1024, 3); // GB
+
+        var taskNumber = memory * cpuSpec / 10;
+
+        return Math.round(taskNumber);
     }
 
 // TODO
@@ -297,7 +305,7 @@ async function firstSearch(url) {
         }
     }
 
-    var taskNumber = taskNumberCreater(taskArray.length, 32),
+    var taskNumber = taskNumberCreater(),
         task_search = new TaskSystem(taskArray, taskNumber, {
             randomDelay: 500
         });
@@ -400,7 +408,7 @@ async function fetchSingleImagesUrl(singleArray) {
 
     if (taskArray.length !== 0) {
         console.log('');
-        var taskNumber = taskNumberCreater(taskArray.length, 32),
+        var taskNumber = taskNumberCreater(),
             task_SingleArray = new TaskSystem(taskArray, taskNumber, {
                 randomDelay: 500
             });
@@ -526,7 +534,7 @@ async function fetchMangaImagesUrl(mangoArray) {
     // 開始抓取真實連結
     if (taskArray.length) {
         console.log('');
-        var taskNumber = taskNumberCreater(taskArray.length, 32),
+        var taskNumber = taskNumberCreater(),
             task_mango = new TaskSystem(taskArray, taskNumber, {
                 randomDelay: 500
             });
@@ -685,7 +693,7 @@ async function startDownloadTask(sourceArray = [], {
     }
 
     if (taskArray.length !== 0) {
-        var taskNumber = taskNumberCreater(taskArray.length, 32),
+        var taskNumber = taskNumberCreater(),
             task_download = new TaskSystem(taskArray, taskNumber);
         result = await task_download.doPromise();
     }
