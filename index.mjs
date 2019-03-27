@@ -19,7 +19,7 @@ import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import _ from 'lodash';
 import {
     TaskSystem
-} from './flyc-lib/utils/TaskSystem';
+} from 'npm-flyc';
 
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
