@@ -101,9 +101,6 @@ if (!fs.existsSync('./log/')) {
 // 故事從這裡開始
 (async () => {
 
-    console.log(taskSystem.toString());
-    return;
-
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
         return;
