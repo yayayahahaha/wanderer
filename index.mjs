@@ -17,10 +17,8 @@ import fs from 'fs'
 import os from 'os';
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import _ from 'lodash';
-import {
-    TaskSystem
-} from 'npm-flyc';
-
+import flyc from 'npm-flyc';
+var { taskSystem } = flyc; // nodejs 的import 似乎無法直接解構?
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
 // 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
@@ -102,6 +100,9 @@ if (!fs.existsSync('./log/')) {
 
 // 故事從這裡開始
 (async () => {
+
+    console.log(taskSystem.toString());
+    return;
 
     if (!fs.existsSync('./input.json')) {
         console.log('請修改 input.json');
