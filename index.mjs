@@ -18,7 +18,7 @@ import os from 'os';
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import _ from 'lodash';
 import flyc from 'npm-flyc';
-var { TaskSystem } = flyc; // nodejs 的import 似乎無法直接解構?
+var { TaskSystem, download } = flyc; // nodejs 的import 似乎無法直接解構?
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
 // 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
@@ -711,7 +711,8 @@ async function startDownloadTask(sourceArray = [], {
             cacheKey = object.cacheKey;
 
         return function() {
-            return download(url, filePath, headers, {
+            return download(url, filePath, {
+                headers,
                 callback: function(status, cacheKey) {
                     if (!status) return;
                     cacheDirectory[ORIGINAL_RESULT_FILE_NAME][cacheKey].downloaded = url;
@@ -727,49 +728,4 @@ async function startDownloadTask(sourceArray = [], {
             downloaded = eachImageObject.downloaded;
         return downloaded;
     }
-}
-
-function download(url, filePath, headers = {}, {
-    callback = Function.prototype,
-    callbackParameter = undefined
-} = {}) {
-    return new Promise(async (resolve, reject) => {
-        // 濾掉尾巴的斜線
-        if (/\/$/.test(filePath)) {
-            filePath = filePath.slice(0, filePath.length - 1);
-        }
-        // 濾掉開頭的./
-        if (/^\.\//.test(filePath)) {
-            filePath = filePath.slice(2, filePath.length);
-        }
-
-        // 如果資料夾不存在會自動創建的系統
-        var paths = filePath.split('/'),
-            createdDirectory = [];
-        for (var i = 0; i < paths.length - 1; i++) {
-            createdDirectory.push(paths[i]);
-            var checkedDirectory = createdDirectory.join('/');
-            !fs.existsSync(checkedDirectory) && fs.mkdirSync(checkedDirectory);
-        }
-
-        var file = fs.createWriteStream(filePath);
-        axios({
-            method: 'get',
-            url: url,
-            responseType: 'stream',
-            headers: headers
-        }).then(({
-            data
-        }) => {
-            callback(true, callbackParameter);
-            data.pipe(file);
-            file.on('finish', () => {
-                resolve(true);
-            });
-        }).catch((error) => {
-            console.log(error);
-            callback(false, callbackParameter);
-            reject([null, error]);
-        });
-    });
 }
