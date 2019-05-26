@@ -167,7 +167,6 @@ if (!fs.existsSync('./log/')) {
         console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
     }
 
-
     // 多重圖片的部分
     if (multipleArray.length !== 0) {
         // 取出漫畫圖檔頁面上的真實路徑"們"
@@ -279,7 +278,7 @@ async function firstSearch(url) {
         maxPage;
 
     var taskArray = [];
-    for (var i = 0; i < totalPages; i++) {
+    for (var i = 1; i <= totalPages; i++) {
         taskArray.push(_createReturnFunction(i));
     }
 
@@ -324,6 +323,7 @@ async function firstSearch(url) {
 function formatAllPagesImagesArray(allPagesImagesArray) {
     console.log('');
     console.log(`開始從中挑選出愛心數大於 ${likedLevel} 顆的連結..`);
+
     // 過濾掉失敗的頁數
     // !!: 過濾越早越好
     // 但不知道為什麼總數量比頁面上顯示的要少?
