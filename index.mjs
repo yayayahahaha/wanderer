@@ -23,8 +23,7 @@ import flyc from 'npm-flyc';
 // 操偶師: 瀏覽器模擬器
 import puppeteer from 'puppeteer';
 
-
-var {
+const {
   TaskSystem,
   download
 } = flyc; // nodejs 的import 似乎無法直接解構?
@@ -33,12 +32,11 @@ var {
 // 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
 var currentSESSID = '';
 
-var keyword = '',
-  page = 1,
-  totalPages = null,
+let eachPageInterval = 60,
   totalCount = null,
   likedLevel = 100, // 星星數
   maxPage = 0, // 最大頁數
+
   ORIGINAL_RESULT_FILE_NAME = null,
   cacheDirectory = {};
 
@@ -47,7 +45,7 @@ var firstSearchTaskNumber = 16,
   mangoArrayTaskNumber = 8,
   downloadTaskNumber = 4;
 
-var getSearchHeader = function() {
+const getSearchHeader = function() {
     return {
       'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5',
       cookie: `PHPSESSID=${currentSESSID};`
@@ -63,8 +61,12 @@ var getSearchHeader = function() {
       referer: `https://www.pixiv.net/member_illust.php?mode=${ mode }&illust_id=${createrID}`
     };
   },
+  getKeywordsInfoUrl = function(keyword, page = 1) {
+    const url = `https://www.pixiv.net/ajax/search/artworks/${keyword}?word=${keyword}&order=date&mode=all&p=${page}&s_mode=s_tag&type=all`
+    return encodeURI(url);
+  },
   getSearchUrl = function(keyword, page) {
-    const url = `https://www.pixiv.net/tags/${keyword}/artworks?p=${page}&s_mode=s_tag`
+    const url = `https://www.pixiv.net/tags/${keyword}/artworks?p=${page}&s_mode=s_tag&order=date`
     return encodeURI(url);
   },
   getCacheFileName = function(keyword = 'pixiv', jsonEnd = false) {
@@ -110,19 +112,20 @@ if (!fs.existsSync('./log/')) {
 }
 
 // 故事從這裡開始
-(async () => {
-
+(async ({
+  eachPageInterval
+}) => {
   if (!fs.existsSync('./input.json')) {
     console.log('請修改 input.json');
     return;
   }
-  var contents = fs.readFileSync('./input.json'),
+  const contents = fs.readFileSync('./input.json'),
     inputJSON = JSON.parse(contents);
 
-  keyword = inputJSON.keyword;
-  likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500;
-  maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0;
-  currentSESSID = inputJSON.SESSID;
+  const keyword = inputJSON.keyword;
+  const likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500;
+  const maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0;
+  const currentSESSID = inputJSON.SESSID;
 
   if (!keyword) {
     console.log('請在 input.json 檔裡輸入關鍵字');
@@ -137,8 +140,35 @@ if (!fs.existsSync('./log/')) {
 
   // 確認input 資料完畢，開始fetch
 
-  // 取得該搜尋關鍵字的全部頁面
-  var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page), keyword);
+  // 取得該搜尋關鍵字的基本資訊
+  const keywordInfo = await firstSearch(keyword)
+  const totalPages = Math.ceil(keywordInfo.total / eachPageInterval)
+  console.log(`共有 ${keywordInfo.total} 筆， ${totalPages} 頁`);
+
+  const searchFuncArray = []
+  // for (let i = 1; i <= totalPages; i++) {
+  for (let i = 1; i <= 10; i++) {
+    if (i === 1) continue
+    searchFuncArray.push(_create_each_search_page(keyword, i))
+  }
+  const taskNumber = taskNumberCreater(),
+    task_search = new TaskSystem(searchFuncArray, 40);
+
+  let allPagesImagesArray = await task_search.doPromise();
+  allPagesImagesArray = allPagesImagesArray.map((result) => result.data[0].body.illustManga)
+  allPagesImagesArray = [keywordInfo].concat(allPagesImagesArray)
+
+  fs.writeFileSync('result.json', JSON.stringify(allPagesImagesArray, null, 2))
+
+  function _create_each_search_page(keyword, page) {
+    return function() {
+      return request({
+        method: 'get',
+        url: getKeywordsInfoUrl(keyword, page),
+        headers: getSearchHeader()
+      })
+    }
+  }
   return
 
   // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
@@ -213,11 +243,32 @@ if (!fs.existsSync('./log/')) {
   console.log(`總成功數: ${ successCount }`);
   console.log(`總失敗數: ${ failedCount }`);
 
-})();
+})({
+  eachPageInterval
+});
+
+function request(config) {
+  return axios(config).then(({
+    data
+  }) => [data, null]).catch((error) => [null, error])
+}
+
+async function firstSearch(keyword) {
+  const [firstPageData, error] = await request({
+    method: 'get',
+    url: getKeywordsInfoUrl(keyword),
+    headers: getSearchHeader()
+  })
+  if (error) {
+    console.erro('取得資料失敗!');
+    return
+  }
+  return firstPageData.body.illustManga
 
 
-async function firstSearch(url, keyword) {
+  console.log('url: ', url)
   const browser = await puppeteer.launch();
+  console.log('browser created');
 
   return new Promise(async (resolve, reject) => {
     const page = await browser.newPage();
@@ -226,7 +277,9 @@ async function firstSearch(url, keyword) {
     page.on('request', (request) => {
       const headers = request.headers()
       Object.assign(headers, getSearchHeader())
-      request.continue({ headers })
+      request.continue({
+        headers
+      })
     })
 
     // 實際造訪
@@ -234,19 +287,28 @@ async function firstSearch(url, keyword) {
     console.log('page loaded');
 
     const containerSelector = '.sc-LzNOT.ljRaki'
-    // const aLinkSelector = 'a.sc-fzXfPH.lgBvYG'
     const aLinkSelector = '.sc-fzXfQr.loDYFF'
     const combineSelector = `${containerSelector} ${aLinkSelector}`
 
     // TODO: 這裡要做race timeout 機制
-    await page.waitForSelector(combineSelector)
-    const html = await page.evaluate((selector) => {
+    let [spaLoaded] = await page.waitForSelector(combineSelector).then(() => [true, null]).catch(() => [null, true]);
+    if (!spaLoaded) {
+      console.log('載入失敗!')
+      return
+    }
+
+    const totalPages = await page.evaluate(() => {
+      return document.querySelector('span.sc-LzNOm.jXwrXb').innerText
+    })
+    console.log('totalPages: ', totalPages);
+
+    const pageArtWorks = await page.evaluate((selector) => {
       const aLinkList = document.querySelectorAll(`${selector}`)
       return [].map.call(aLinkList, (dom) => {
         const authorDom = dom.querySelector('div.sc-fzXfQm.cEJTuv > a')
         const artworkDom = dom.querySelector('a.sc-fzXfQs.cdGUCF')
         return {
-          authorName: authorDom .innerText,
+          authorName: authorDom.innerText,
           authorId: authorDom.getAttribute('href').split('/users/')[1],
           artworkName: artworkDom.innerText,
           artworkId: artworkDom.getAttribute('href').split('/artworks/')[1],
@@ -257,7 +319,7 @@ async function firstSearch(url, keyword) {
       })
     }, combineSelector)
 
-    fs.writeFileSync(`./puppeteer.json`, JSON.stringify(html, null, 2));
+    fs.writeFileSync(`./puppeteer.json`, JSON.stringify(pageArtWorks, null, 2));
 
     await browser.close();
     return
