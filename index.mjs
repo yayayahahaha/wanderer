@@ -52,14 +52,13 @@ const getSearchHeader = function() {
       cookie: `PHPSESSID=${currentSESSID};`
     };
   },
-  getSinegleHeader = function(createrID, mode) {
-    mode = mode ? mode : 'medium';
-    if (!createrID) {
-      console.log('請務必輸入該作者的ID');
+  getSinegleHeader = function(illustId) {
+    if (!illustId) {
+      console.log('getSinegleHeader: 請務必輸入illustId');
       return {};
     }
     return {
-      referer: `https://www.pixiv.net/member_illust.php?mode=${ mode }&illust_id=${createrID}`
+      referer: `https://www.pixiv.net/artworks/${illustId}`
     };
   },
   getKeywordsInfoUrl = function(keyword, page = 1) {
@@ -90,6 +89,11 @@ const getSearchHeader = function() {
     var taskNumber = memory * cpuSpec / 10;
 
     return Math.round(taskNumber);
+  },
+  defaultTaskSetting = function() {
+    return {
+      randomDelay: 0
+    }
   }
 
 // TODO
@@ -152,8 +156,11 @@ if (!fs.existsSync('./log/')) {
   // 把task 展開: singleArray 的只會有一張、multiple 的會有多張
   const singleArray_format = fetchSingleImagesUrl(singleArray)
   const multipleArray_format = await fetchMultipleImagesUrl(multipleArray)
+  const totalImageArray = singleArray_format.concat(multipleArray_format)
 
-  fs.writeFileSync('result.json', JSON.stringify(singleArray_format.concat(multipleArray_format), null, 2))
+  await startDownloadTask(totalImageArray, keyword)
+
+  fs.writeFileSync('result.json', JSON.stringify(totalImageArray, null, 2))
   return
 
   var totalCount = 0,
@@ -337,6 +344,8 @@ function fetchSingleImagesUrl(list) {
     const folder = ''
 
     return {
+      id,
+      userId,
       folder,
       key,
       name,
@@ -385,6 +394,8 @@ async function fetchMultipleImagesUrl(list) {
       const folder = `${illustTitle}-${id}`
 
       return {
+        id,
+        userId,
         folder,
         key,
         name,
@@ -413,80 +424,46 @@ async function fetchMultipleImagesUrl(list) {
   }
 }
 
-
-async function startDownloadTask(sourceArray = [], {
-  mode
-}) {
-  var taskArray = [],
-    task_download = null,
-    cacheLog = [],
-    result = [];
-
-  for (var i = 0; i < sourceArray.length; i++) {
-    var imageInfo = sourceArray[i];
-
-    // 先檢查快取的原因是避免被randomDelay 拖到時間
-    if (_eachImageDownloadedChecker(imageInfo.cacheKey) === imageInfo.url) {
-
-      // 檢查實際上有沒有那隻檔案
-      // 不放在一起檢查是避免明明沒有cache 卻還要走file system 的成本
-      if (fs.existsSync(imageInfo.filePath)) {
-        cacheLog.push(`已下載過 ${imageInfo.filePath}，不重複下載`);
-        result.push({
-          status: 1,
-          data: `已下載過 ${imageInfo.filePath}，不重複下載`,
-          meta: imageInfo
-        });
-        continue;
-      }
-    }
-
-    taskArray.push(_createReturnFunction(imageInfo));
+async function startDownloadTask(sourceArray, keyword) {
+  const keywordFolder = `./${keyword}/`
+  if (!fs.existsSync(keywordFolder)) {
+    fs.mkdirSync(keywordFolder)
   }
 
-  // 有檔案因為下載過而不重複下載時需提示使用者
-  if (cacheLog.length !== 0) {
-    var cacheLogFileName = `${ ORIGINAL_RESULT_FILE_NAME }.cache.downloaded.log.json`;
-    console.log(`!!有部分檔案來源為快取，詳見 ./log/${ cacheLogFileName }`);
-    fs.writeFileSync(`./log/${cacheLogFileName}`, JSON.stringify(cacheLog, null, 2));
+  // for quick detect
+  const existFolderMap = {
+    [keywordFolder]: true
   }
 
-  if (taskArray.length !== 0) {
-    var taskNumber = taskNumberCreater(),
-      task_download = new TaskSystem(taskArray, taskNumber);
-    result = await task_download.doPromise();
+  const taskArray = []
+  for (let i = 0; i < sourceArray.length; i++) {
+    taskArray.push(_create_download_task(sourceArray[i], keyword))
   }
+  const downloadTask = new TaskSystem(taskArray, taskNumberCreater(), defaultTaskSetting())
+  const downloadTaskResult = await downloadTask.doPromise()
 
-  // 這裡應該已經完成了 : D
-  fs.writeFileSync('cacheDirectory.json', JSON.stringify(cacheDirectory, null, 2));
-  console.log('下載完畢');
-  return result;
+  console.log(existFolderMap);
 
-  // 因為hoist 的關係就算宣告式放在return 後面也沒關係
-  function _createReturnFunction(object) {
-    var url = object.url,
-      filePath = object.filePath,
-      userId = object.userId,
-      illustId = object.illustId,
-      headers = getSinegleHeader(userId, mode),
-      cacheKey = object.cacheKey;
-
+  function _create_download_task(image, keyword) {
     return function() {
-      return download(url, filePath, {
-        headers,
-        callback: function(status, cacheKey) {
-          if (!status) return;
-          cacheDirectory[ORIGINAL_RESULT_FILE_NAME][cacheKey].downloaded = url;
-        },
-        callbackParameter: cacheKey
-      });
-    };
-  }
+      const folder = `./${keyword}/${image.folder}`
+      switch (true) {
+        case existFolderMap[folder]:
+        case fs.existsSync(folder):
+          break;
+        default:
+          fs.mkdirSync(folder)
+          break;
+      }
+      existFolderMap[folder] = true
 
-  function _eachImageDownloadedChecker(cacheKey) {
-    var keywordObject = cacheDirectory[ORIGINAL_RESULT_FILE_NAME],
-      eachImageObject = keywordObject[cacheKey],
-      downloaded = eachImageObject.downloaded;
-    return downloaded;
+      const url = image.original
+      const filePath = `${folder}/${image.name}.${image.type}`
+      const headers = getSinegleHeader(image.id)
+
+      return download(url, filePath, {
+        headers
+      })
+    }
   }
 }
