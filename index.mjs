@@ -145,37 +145,14 @@ if (!fs.existsSync('./log/')) {
   const totalPages = Math.ceil(keywordInfo.total / eachPageInterval)
   console.log(`共有 ${keywordInfo.total} 筆， ${totalPages} 頁`);
 
-  const searchFuncArray = []
-  // for (let i = 1; i <= totalPages; i++) {
-  for (let i = 1; i <= 10; i++) {
-    if (i === 1) continue
-    searchFuncArray.push(_create_each_search_page(keyword, i))
-  }
-  const taskNumber = taskNumberCreater(),
-    task_search = new TaskSystem(searchFuncArray, 40);
-
-  let allPagesImagesArray = await task_search.doPromise();
-  allPagesImagesArray = allPagesImagesArray.map((result) => result.data[0].body.illustManga)
+  let allPagesImagesArray = await getRestPages(keyword, totalPages)
   allPagesImagesArray = [keywordInfo].concat(allPagesImagesArray)
 
-  fs.writeFileSync('result.json', JSON.stringify(allPagesImagesArray, null, 2))
+  // 綁定bookmarkCount 和likedCount
+  const data = await bindingBookmarkCount(allPagesImagesArray);
 
-  function _create_each_search_page(keyword, page) {
-    return function() {
-      return request({
-        method: 'get',
-        url: getKeywordsInfoUrl(keyword, page),
-        headers: getSearchHeader()
-      })
-    }
-  }
+  fs.writeFileSync('result.json', JSON.stringify(data, null, 2))
   return
-
-  // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
-  var {
-    singleArray: singlePageArray,
-    multipleArray
-  } = formatAllPagesImagesArray(allPagesImagesArray);
 
   var totalCount = 0,
     successCount = 0,
@@ -264,69 +241,71 @@ async function firstSearch(keyword) {
     return
   }
   return firstPageData.body.illustManga
-
-
-  console.log('url: ', url)
-  const browser = await puppeteer.launch();
-  console.log('browser created');
-
-  return new Promise(async (resolve, reject) => {
-    const page = await browser.newPage();
-    await page.setRequestInterception(true);
-
-    page.on('request', (request) => {
-      const headers = request.headers()
-      Object.assign(headers, getSearchHeader())
-      request.continue({
-        headers
-      })
-    })
-
-    // 實際造訪
-    await page.goto(url);
-    console.log('page loaded');
-
-    const containerSelector = '.sc-LzNOT.ljRaki'
-    const aLinkSelector = '.sc-fzXfQr.loDYFF'
-    const combineSelector = `${containerSelector} ${aLinkSelector}`
-
-    // TODO: 這裡要做race timeout 機制
-    let [spaLoaded] = await page.waitForSelector(combineSelector).then(() => [true, null]).catch(() => [null, true]);
-    if (!spaLoaded) {
-      console.log('載入失敗!')
-      return
-    }
-
-    const totalPages = await page.evaluate(() => {
-      return document.querySelector('span.sc-LzNOm.jXwrXb').innerText
-    })
-    console.log('totalPages: ', totalPages);
-
-    const pageArtWorks = await page.evaluate((selector) => {
-      const aLinkList = document.querySelectorAll(`${selector}`)
-      return [].map.call(aLinkList, (dom) => {
-        const authorDom = dom.querySelector('div.sc-fzXfQm.cEJTuv > a')
-        const artworkDom = dom.querySelector('a.sc-fzXfQs.cdGUCF')
-        return {
-          authorName: authorDom.innerText,
-          authorId: authorDom.getAttribute('href').split('/users/')[1],
-          artworkName: artworkDom.innerText,
-          artworkId: artworkDom.getAttribute('href').split('/artworks/')[1],
-          artworkLink: `${window.location.origin}${artworkDom.getAttribute('href')}`,
-          artworkType: dom.querySelector('.sc-fzXfOZ.gOXMgf') ? 'multiple' : 'single',
-          liked: 0
-        }
-      })
-    }, combineSelector)
-
-    fs.writeFileSync(`./puppeteer.json`, JSON.stringify(pageArtWorks, null, 2));
-
-    await browser.close();
-    return
-  })
 }
 
-function formatAllPagesImagesArray(allPagesImagesArray) {}
+async function getRestPages(keyword, totalPages) {
+  const searchFuncArray = []
+  // for (let i = 1; i <= totalPages; i++) {
+  for (let i = 1; i <= 1; i++) {
+    if (i === 1) continue
+    searchFuncArray.push(_create_each_search_page(keyword, i))
+  }
+  const taskNumber = taskNumberCreater(),
+    task_search = new TaskSystem(searchFuncArray, 40);
+
+  let allPagesImagesArray = await task_search.doPromise();
+  allPagesImagesArray = allPagesImagesArray.map((result) => result.data[0].body.illustManga)
+  return allPagesImagesArray
+
+  function _create_each_search_page(keyword, page) {
+    return function() {
+      return request({
+        method: 'get',
+        url: getKeywordsInfoUrl(keyword, page),
+        headers: getSearchHeader()
+      })
+    }
+  }
+}
+
+async function bindingBookmarkCount(allPagesImagesArray) {
+  const flattenArray = allPagesImagesArray.reduce((array, pageInfo) => array.concat(pageInfo.data), [])
+  const allPagesImagesMap = flattenArray.reduce((map, item) => Object.assign(map, { [item.illustId]: item }), {})
+
+  const taskArray = []
+  flattenArray.forEach((imageItem) => {
+    taskArray.push(_each_image_page(imageItem.illustId))
+  })
+  const taskNumber = taskNumberCreater(),
+    bookmarkTask = new TaskSystem(taskArray, taskNumber),
+    bookmarkTaskResult = await bookmarkTask.doPromise();
+
+  const resultMap = {}
+  bookmarkTaskResult.forEach((result) => Object.assign(resultMap, result.data.illust))
+  Object.keys(allPagesImagesMap).forEach((illustId) => {
+    const urls = resultMap[illustId].urls
+    const bookmarkCount = resultMap[illustId].bookmarkCount
+    const likeCount = resultMap[illustId].likeCount
+    Object.assign(allPagesImagesMap[illustId], { urls, bookmarkCount, likeCount })
+  })
+
+  return allPagesImagesMap
+
+  function _each_image_page(illustId) {
+    return function() {
+      return request({
+        method: 'get',
+        url: `https://www.pixiv.net/artworks/${illustId}`,
+        headers: getSearchHeader()
+      }).then(([data]) => {
+        const splitPattern1 = `<meta name="preload-data" id="meta-preload-data" content='`
+        const splitPattern2 = `</head>`
+        const splitPattern3 = `'>`
+        return JSON.parse(data.split(splitPattern1)[1].split(splitPattern2)[0].split(splitPattern3)[0])
+      })
+    }
+  }
+}
 
 async function fetchSingleImagesUrl(singleArray) {
   console.log('');
