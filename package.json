@@ -15,5 +15,7 @@
     "npm-flyc": "^1.0.10",
     "request": "^2.88.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "puppeteer": "^2.1.1"
+  }
 }
