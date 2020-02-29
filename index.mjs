@@ -151,7 +151,13 @@ if (!fs.existsSync('./log/')) {
   // 綁定bookmarkCount 和likedCount
   const formatedImagesArray = await bindingBookmarkCount(allPagesImagesArray);
 
-  fs.writeFileSync('result.json', JSON.stringify(data, null, 2))
+  // 分割出singleArray 和multipleArray
+  const {
+    singleArray,
+    multipleArray
+  } = separateSingleAndMultiple(formatedImagesArray)
+
+  fs.writeFileSync('result.json', JSON.stringify(separateSingleAndMultiple(formatedImagesArray), null, 2))
   return
 
   var totalCount = 0,
@@ -270,7 +276,9 @@ async function getRestPages(keyword, totalPages) {
 
 async function bindingBookmarkCount(allPagesImagesArray) {
   const flattenArray = allPagesImagesArray.reduce((array, pageInfo) => array.concat(pageInfo.data), [])
-  const allPagesImagesMap = flattenArray.reduce((map, item) => Object.assign(map, { [item.illustId]: item }), {})
+  const allPagesImagesMap = flattenArray.reduce((map, item) => Object.assign(map, {
+    [item.illustId]: item
+  }), {})
 
   const taskArray = []
   flattenArray.forEach((imageItem) => {
@@ -286,7 +294,11 @@ async function bindingBookmarkCount(allPagesImagesArray) {
     const urls = resultMap[illustId].urls
     const bookmarkCount = resultMap[illustId].bookmarkCount
     const likeCount = resultMap[illustId].likeCount
-    Object.assign(allPagesImagesMap[illustId], { urls, bookmarkCount, likeCount })
+    Object.assign(allPagesImagesMap[illustId], {
+      urls,
+      bookmarkCount,
+      likeCount
+    })
   })
 
   return allPagesImagesMap
@@ -305,6 +317,24 @@ async function bindingBookmarkCount(allPagesImagesArray) {
       })
     }
   }
+}
+
+function separateSingleAndMultiple(list) {
+  return Object.keys(list).reduce((object, illustId) => {
+    const item = list[illustId]
+    switch (item.pageCount) {
+      case 1:
+        object.singleArray.push(item)
+        break
+      default:
+        object.multipleArray.push(item)
+        break
+    }
+    return object
+  }, {
+    singleArray: [],
+    multipleArray: []
+  })
 }
 
 async function startDownloadTask(sourceArray = [], {
