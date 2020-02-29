@@ -151,13 +151,17 @@ if (!fs.existsSync('./log/')) {
   // 綁定bookmarkCount 和likedCount
   const formatedImagesArray = await bindingBookmarkCount(allPagesImagesArray);
 
+  // 過濾星星數: bookmarkCount + likedCount
+  const filterImagesArray = filterBookmarkCount(formatedImagesArray, likedLevel)
+
   // 分割出singleArray 和multipleArray
   const {
     singleArray,
     multipleArray
-  } = separateSingleAndMultiple(formatedImagesArray)
+  } = separateSingleAndMultiple(filterImagesArray)
 
-  fs.writeFileSync('result.json', JSON.stringify(separateSingleAndMultiple(formatedImagesArray), null, 2))
+
+  fs.writeFileSync('result.json', JSON.stringify(separateSingleAndMultiple(filterImagesArray), null, 2))
   return
 
   var totalCount = 0,
@@ -319,9 +323,16 @@ async function bindingBookmarkCount(allPagesImagesArray) {
   }
 }
 
+function filterBookmarkCount(map, level = 0) {
+  const list = Object.keys(map).map((id) => map[id])
+  return list.filter((item) => {
+    const likedLevel = item.bookmarkCount + item.likeCount
+    return likedLevel >= level
+  })
+}
+
 function separateSingleAndMultiple(list) {
-  return Object.keys(list).reduce((object, illustId) => {
-    const item = list[illustId]
+  return list.reduce((object, item) => {
     switch (item.pageCount) {
       case 1:
         object.singleArray.push(item)
