@@ -234,13 +234,27 @@ async function firstSearch(url, keyword) {
     console.log('page loaded');
 
     const containerSelector = '.sc-LzNOT.ljRaki'
-    const aLinkSelector = 'a.sc-fzXfPH.lgBvYG'
+    // const aLinkSelector = 'a.sc-fzXfPH.lgBvYG'
+    const aLinkSelector = '.sc-fzXfQr.loDYFF'
     const combineSelector = `${containerSelector} ${aLinkSelector}`
 
+    // TODO: 這裡要做race timeout 機制
     await page.waitForSelector(combineSelector)
     const html = await page.evaluate((selector) => {
       const aLinkList = document.querySelectorAll(`${selector}`)
-      return [].map.call(aLinkList, dom => `${window.location.origin}${dom.getAttribute('href')}`)
+      return [].map.call(aLinkList, (dom) => {
+        const authorDom = dom.querySelector('div.sc-fzXfQm.cEJTuv > a')
+        const artworkDom = dom.querySelector('a.sc-fzXfQs.cdGUCF')
+        return {
+          authorName: authorDom .innerText,
+          authorId: authorDom.getAttribute('href').split('/users/')[1],
+          artworkName: artworkDom.innerText,
+          artworkId: artworkDom.getAttribute('href').split('/artworks/')[1],
+          artworkLink: `${window.location.origin}${artworkDom.getAttribute('href')}`,
+          artworkType: dom.querySelector('.sc-fzXfOZ.gOXMgf') ? 'multiple' : 'single',
+          liked: 0
+        }
+      })
     }, combineSelector)
 
     fs.writeFileSync(`./puppeteer.json`, JSON.stringify(html, null, 2));
