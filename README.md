@@ -1,5 +1,10 @@
 # Wanderer
 
-> due to the pixiv update their program, this project is not working anymore  
-> right on the way of refatored.
-> hope it works...
+tool for download your favorite Pixiv images!  
+
+## How to use
+
+1. npm install  
+2. modified the input.json file  
+3. npm run dev  
+4. just wait  
