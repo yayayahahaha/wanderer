@@ -137,7 +137,6 @@ if (!fs.existsSync('./log/')) {
     console.log('');
     return;
   }
-
   // 確認input 資料完畢，開始fetch
 
   // 取得該搜尋關鍵字的基本資訊
@@ -164,7 +163,7 @@ if (!fs.existsSync('./log/')) {
   const singleArray_format = fetchSingleImagesUrl(singleArray)
   const multipleArray_format = await fetchMultipleImagesUrl(multipleArray)
 
-  fs.writeFileSync('result.json', JSON.stringify(singleArray_format, null, 2))
+  fs.writeFileSync('result.json', JSON.stringify(singleArray_format.concat(multipleArray_format), null, 2))
   return
 
   var totalCount = 0,
@@ -319,7 +318,60 @@ function fetchSingleImagesUrl(list) {
 
   })
 }
-async function fetchMultipleImagesUrl() {}
+async function fetchMultipleImagesUrl(list) {
+  const taskArray = []
+  for (let i = 0; i < list.length; i++) {
+    const mulImage = list[i]
+    taskArray.push(_create_get_multiple_images(mulImage.illustId))
+  }
+  const getMultiOriTask = new TaskSystem(taskArray, taskNumberCreater())
+  const getMultiOriTaskResult = await getMultiOriTask.doPromise()
+
+  const multiMap = list.reduce((map, item) => Object.assign(map, { [item.illustId]: item }), {})
+
+  let multiArray = []
+  getMultiOriTaskResult.forEach((result) => {
+    const resultItem = result.data
+    const illustId = resultItem.illustId
+
+    const { id, userId, illustTitle, userName } = multiMap[illustId]
+    const multiImages = resultItem.data.map(({ urls }) => {
+      const original = urls.original
+      const index = original.split(original.split(/_p\d\./)[0])[1].split('.')[0]
+
+      const key = `${id}-${userId}-${index}`
+      const name = `${illustTitle}_${id}_${userName}_${userId}${index}`
+
+      const typeIndex = original.split('.').length - 1
+      const type = original.split('.')[typeIndex]
+
+      const folder = `${illustTitle}-${id}`
+
+      return {
+        folder,
+        key,
+        name,
+        original,
+        type
+      }
+    })
+    multiArray = multiArray.concat(multiImages)
+  })
+
+  return multiArray
+
+  function _create_get_multiple_images(illustId) {
+    return function() {
+      return request({
+        method: 'get',
+        url: `https://www.pixiv.net/ajax/illust/${illustId}/pages`,
+        headers: getSearchHeader()
+      }).then(([data]) => {
+        return Object.assign({illustId, data: data.body})
+      })
+    }
+  }
+}
 
 
 async function startDownloadTask(sourceArray = [], {
