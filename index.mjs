@@ -160,66 +160,16 @@ if (!fs.existsSync('./log/')) {
     multipleArray
   } = separateSingleAndMultiple(filterImagesArray)
 
+  // 把task 展開: singleArray 的只會有一張、multiple 的會有多張
+  const singleArray_format = fetchSingleImagesUrl(singleArray)
+  const multipleArray_format = await fetchMultipleImagesUrl(multipleArray)
 
-  fs.writeFileSync('result.json', JSON.stringify(separateSingleAndMultiple(filterImagesArray), null, 2))
+  fs.writeFileSync('result.json', JSON.stringify(singleArray_format, null, 2))
   return
 
   var totalCount = 0,
     successCount = 0,
     failedCount = 0;
-
-  // 單一圖片的部分
-
-  if (singlePageArray.length !== 0) {
-    // 取出該單一圖檔頁面上的真實路徑
-    var singleUrlArray = await fetchSingleImagesUrl(singlePageArray),
-      finalUrlArray = createPathAndName(singleUrlArray);
-    console.log('取得單一圖片連結完畢');
-
-    console.log('');
-    console.log('開始下載: ');
-    var result = await startDownloadTask(finalUrlArray, {
-      mode: 'medium' // 用來產header
-    });
-
-    // 這應該是最後了
-    totalCount += result.length;
-    for (var i = 0; i < result.length; i++) {
-      if (result[i].status === 1) {
-        successCount++;
-      } else {
-        failedCount++;
-      }
-    }
-
-  } else {
-    console.log(`單一圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
-  }
-
-  // 多重圖片的部分
-  if (multipleArray.length !== 0) {
-    // 取出漫畫圖檔頁面上的真實路徑"們"
-    var mangoUrlArray = await fetchMangaImagesUrl(multipleArray),
-      finalMangoUrlArray = createMangoPathAndName(mangoUrlArray);
-    console.log('取得多重圖片連結完畢');
-
-    console.log('');
-    console.log('開始下載');
-    var resultMango = await startDownloadTask(finalMangoUrlArray, {
-      mode: 'manga_big'
-    });
-
-    totalCount += resultMango.length;
-    for (var i = 0; i < resultMango.length; i++) {
-      if (resultMango[i].status === 1) {
-        successCount++;
-      } else {
-        failedCount++;
-      }
-    }
-  } else {
-    console.log(`多重圖片裡沒有愛心數大於 ${ likedLevel } 的圖片`);
-  }
 
   // 還要加上單一圖片和多重圖片的各別數字
   console.log('');
@@ -347,6 +297,30 @@ function separateSingleAndMultiple(list) {
     multipleArray: []
   })
 }
+
+function fetchSingleImagesUrl(list) {
+  return list.map(({id, userId, illustTitle, userName, urls}) => {
+    const key = `${id}-${userId}`
+    const name = `${illustTitle}_${id}_${userName}_${userId}`
+    const original = urls.original
+
+    const typeIndex = original.split('.').length - 1
+    const type = original.split('.')[typeIndex]
+
+    const folder = ''
+
+    return {
+      folder,
+      key,
+      name,
+      original,
+      type
+    }
+
+  })
+}
+async function fetchMultipleImagesUrl() {}
+
 
 async function startDownloadTask(sourceArray = [], {
   mode
