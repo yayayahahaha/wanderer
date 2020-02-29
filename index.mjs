@@ -222,7 +222,7 @@ async function getRestPages(keyword, totalPages) {
     searchFuncArray.push(_create_each_search_page(keyword, i))
   }
   const taskNumber = taskNumberCreater(),
-    task_search = new TaskSystem(searchFuncArray, 40);
+    task_search = new TaskSystem(searchFuncArray, 40, defaultTaskSetting());
 
   let allPagesImagesArray = await task_search.doPromise();
   allPagesImagesArray = allPagesImagesArray.map((result) => result.data[0].body.illustManga)
@@ -250,7 +250,7 @@ async function bindingBookmarkCount(allPagesImagesArray) {
     taskArray.push(_each_image_page(imageItem.illustId))
   })
   const taskNumber = taskNumberCreater(),
-    bookmarkTask = new TaskSystem(taskArray, taskNumber),
+    bookmarkTask = new TaskSystem(taskArray, taskNumber, defaultTaskSetting()),
     bookmarkTaskResult = await bookmarkTask.doPromise();
 
   const resultMap = {}
@@ -344,7 +344,7 @@ async function fetchMultipleImagesUrl(list) {
     const mulImage = list[i]
     taskArray.push(_create_get_multiple_images(mulImage.illustId))
   }
-  const getMultiOriTask = new TaskSystem(taskArray, taskNumberCreater())
+  const getMultiOriTask = new TaskSystem(taskArray, taskNumberCreater(), defaultTaskSetting())
   const getMultiOriTaskResult = await getMultiOriTask.doPromise()
 
   const multiMap = list.reduce((map, item) => Object.assign(map, {
