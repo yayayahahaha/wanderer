@@ -215,22 +215,39 @@ if (!fs.existsSync('./log/')) {
 
 })();
 
+
 async function firstSearch(url, keyword) {
-
   const browser = await puppeteer.launch();
-  const page = await browser.newPage();
 
-  page.on('response', )
+  return new Promise(async (resolve, reject) => {
+    const page = await browser.newPage();
+    await page.setRequestInterception(true);
 
-  await page.goto(url);
+    page.on('request', (request) => {
+      const headers = request.headers()
+      Object.assign(headers, getSearchHeader())
+      request.continue({ headers })
+    })
 
-  const html = await page.content()
-  const $ = cheerio.load(html)
-  console.log($('#root').html());
+    // 實際造訪
+    await page.goto(url);
+    console.log('page loaded');
 
-  await browser.close();
-  return
+    const containerSelector = '.sc-LzNOT.ljRaki'
+    const aLinkSelector = 'a.sc-fzXfPH.lgBvYG'
+    const combineSelector = `${containerSelector} ${aLinkSelector}`
 
+    await page.waitForSelector(combineSelector)
+    const html = await page.evaluate((selector) => {
+      const aLinkList = document.querySelectorAll(`${selector}`)
+      return [].map.call(aLinkList, dom => `${window.location.origin}${dom.getAttribute('href')}`)
+    }, combineSelector)
+
+    fs.writeFileSync(`./puppeteer.json`, JSON.stringify(html, null, 2));
+
+    await browser.close();
+    return
+  })
 }
 
 /*
