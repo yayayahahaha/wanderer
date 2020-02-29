@@ -1,4 +1,4 @@
-# Wanderer
+# Pixiv Downloader
 
 Download your favorite Pixiv images!  
 
