@@ -18,6 +18,11 @@ import os from 'os';
 import cheerio from 'cheerio'; //var $ = cheerio.load(res.data);
 import _ from 'lodash';
 import flyc from 'npm-flyc';
+
+// 操偶師: 瀏覽器模擬器
+import puppeteer from 'puppeteer';
+
+
 var { TaskSystem, download } = flyc; // nodejs 的import 似乎無法直接解構?
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
@@ -55,7 +60,8 @@ var getSearchHeader = function() {
         };
     },
     getSearchUrl = function(keyword, page) {
-        return encodeURI(`https://www.pixiv.net/search.php?word=${keyword}&order=date_d&p=${page}`);
+        const url = `https://www.pixiv.net/tags/${keyword}/artworks?p=${page}&s_mode=s_tag`
+        return encodeURI(url);
     },
     getCacheFileName = function(keyword = 'pixiv', jsonEnd = false) {
         var base = `${ keyword.replace(/ /g, '_') }`;
@@ -81,6 +87,7 @@ var getSearchHeader = function() {
 
 // TODO
 // 檢查是否存在的部分一定要做成library
+
 // 檢查cacheDirectory.json 是否存在
 if (!fs.existsSync('./cacheDirectory.json')) {
     fs.writeFileSync('cacheDirectory.json', JSON.stringify({}));
@@ -127,7 +134,8 @@ if (!fs.existsSync('./log/')) {
     // 確認input 資料完畢，開始fetch
 
     // 取得該搜尋關鍵字的全部頁面
-    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page));
+    var allPagesImagesArray = await firstSearch(getSearchUrl(keyword, page), keyword);
+    return
 
     // 將所有圖片依照單一圖檔或複數圖庫分類，已經做好likedLevel 過濾
     var {
@@ -203,10 +211,36 @@ if (!fs.existsSync('./log/')) {
 
 })();
 
-async function firstSearch(url) {
+async function firstSearch() {
     console.log('');
     console.log(`欲查詢的關鍵字是: ${keyword}`);
 
+    console.log('');
+    console.log('開始啟動操偶師');
+    const browser = await puppeteer.launch();
+    console.log('操偶師啟動完畢');
+
+    console.log('創建頁面');
+    const page = await browser.newPage();
+    console.log('頁面創建完畢');
+
+    console.log('確認總頁數');
+    await page.goto(url);
+
+    const [firstSearchData, requestError] = await page.$eval('.sc-LzNOi.iymneF', (dom) => {
+        return [dom.outerHTML, null]
+    }).catch(what => [null, what.message])
+    if (requestError) {
+        console.log('error: ', requestError)
+    }
+    console.log(firstSearchData);
+
+    await browser.close();
+    return
+}
+
+/*
+async function firstSearch(url, keyword) {
     // 快取檔檔名
     maxPage = typeof maxPage === 'number' ? parseInt(maxPage, 10) : 0;
     ORIGINAL_RESULT_FILE_NAME = maxPage ?
@@ -319,6 +353,7 @@ async function firstSearch(url) {
 
     return allPagesImagesArray;
 }
+*/
 
 function formatAllPagesImagesArray(allPagesImagesArray) {
     console.log('');
