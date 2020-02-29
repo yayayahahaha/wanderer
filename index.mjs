@@ -24,20 +24,9 @@ const {
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
 // 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
-var currentSESSID = '';
+let currentSESSID = '';
 
-let eachPageInterval = 60,
-  totalCount = null,
-  likedLevel = 100, // 星星數
-  maxPage = 0, // 最大頁數
-
-  ORIGINAL_RESULT_FILE_NAME = null,
-  cacheDirectory = {};
-
-var firstSearchTaskNumber = 16,
-  singleArrayTaskNumber = 8,
-  mangoArrayTaskNumber = 8,
-  downloadTaskNumber = 4;
+let eachPageInterval = 60;
 
 const getSearchHeader = function() {
     if (!currentSESSID) console.log('getSearchHeader: currentSESSID 為空！');
@@ -59,28 +48,20 @@ const getSearchHeader = function() {
     const url = `https://www.pixiv.net/ajax/search/artworks/${keyword}?word=${keyword}&order=date&mode=all&p=${page}&s_mode=s_tag&type=all`
     return encodeURI(url);
   },
-  getSearchUrl = function(keyword, page) {
-    const url = `https://www.pixiv.net/tags/${keyword}/artworks?p=${page}&s_mode=s_tag&order=date`
-    return encodeURI(url);
-  },
-  getCacheFileName = function(keyword = 'pixiv', jsonEnd = false) {
-    var base = `${ keyword.replace(/ /g, '_') }`;
-    return jsonEnd ? `${ base }.json` : base;
-  },
   taskNumberCreater = function() {
-    var cpus = os.cpus(),
+    const cpus = os.cpus(),
       cpusAmount = cpus.length,
       cpuSpec = cpus.reduce(function(cardinalNumber, cpu) {
-        var total = 0;
-        for (var item in cpu.times) {
+        let total = 0;
+        for (let item in cpu.times) {
           total += cpu.times[item];
         }
         return cardinalNumber + (cpu.times.idle * 100 / total);
       }, 0) / cpusAmount;
 
-    var memory = os.freemem() / Math.pow(1024, 3); // GB
+    const memory = os.freemem() / Math.pow(1024, 3); // GB
 
-    var taskNumber = memory * cpuSpec / 10;
+    const taskNumber = memory * cpuSpec / 10;
 
     return Math.round(taskNumber);
   },
@@ -88,27 +69,7 @@ const getSearchHeader = function() {
     return {
       randomDelay: 0
     }
-  }
-
-// TODO
-// 檢查是否存在的部分一定要做成library
-
-// 檢查cacheDirectory.json 是否存在
-if (!fs.existsSync('./cacheDirectory.json')) {
-  fs.writeFileSync('cacheDirectory.json', JSON.stringify({}));
-} else {
-  var contents = fs.readFileSync('./cacheDirectory.json'),
-    json = JSON.parse(contents);
-  cacheDirectory = json;
-}
-// 檢查cache/ 是否存在
-if (!fs.existsSync('./cache/')) {
-  fs.mkdirSync('./cache/');
-}
-// 檢查log/ 是否存在
-if (!fs.existsSync('./log/')) {
-  fs.mkdirSync('./log/');
-}
+  };
 
 // 故事從這裡開始
 (async ({
@@ -216,8 +177,7 @@ async function firstSearch(keyword) {
 
 async function getRestPages(keyword, totalPages) {
   const searchFuncArray = []
-  // for (let i = 1; i <= totalPages; i++) {
-  for (let i = 1; i <= 1; i++) {
+  for (let i = 1; i <= totalPages; i++) {
     if (i === 1) continue
     searchFuncArray.push(_create_each_search_page(keyword, i))
   }
@@ -428,8 +388,6 @@ async function startDownloadTask(sourceArray, keyword) {
   }
   const downloadTask = new TaskSystem(taskArray, taskNumberCreater(), defaultTaskSetting())
   const downloadTaskResult = await downloadTask.doPromise()
-
-  console.log(existFolderMap);
 
   function _create_download_task(image, keywordFolder) {
     return function() {
