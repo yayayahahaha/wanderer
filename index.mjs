@@ -46,6 +46,7 @@ var firstSearchTaskNumber = 16,
   downloadTaskNumber = 4;
 
 const getSearchHeader = function() {
+    if (!currentSESSID) console.log('getSearchHeader: currentSESSID 為空！');
     return {
       'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5',
       cookie: `PHPSESSID=${currentSESSID};`
@@ -115,29 +116,18 @@ if (!fs.existsSync('./log/')) {
 (async ({
   eachPageInterval
 }) => {
-  if (!fs.existsSync('./input.json')) {
-    console.log('請修改 input.json');
-    return;
-  }
-  const contents = fs.readFileSync('./input.json'),
-    inputJSON = JSON.parse(contents);
+  // 確認input 資料
+  const inputChecked = inputChecker()
+  if (!inputChecked) return
 
-  const keyword = inputJSON.keyword;
-  const likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500;
-  const maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0;
-  const currentSESSID = inputJSON.SESSID;
-
-  if (!keyword) {
-    console.log('請在 input.json 檔裡輸入關鍵字');
-    console.log('');
-    return;
-  }
-  if (!currentSESSID) {
-    console.log('請在 input.json 檔裡輸入SESSID');
-    console.log('');
-    return;
-  }
-  // 確認input 資料完畢，開始fetch
+  // 宣告變數
+  const {
+    keyword,
+    likedLevel,
+    maxPage,
+    currentSESSID: ssid
+  } = inputChecked
+  currentSESSID = ssid // TODO: avoid using global variable
 
   // 取得該搜尋關鍵字的基本資訊
   const keywordInfo = await firstSearch(keyword)
@@ -187,6 +177,38 @@ function request(config) {
   return axios(config).then(({
     data
   }) => [data, null]).catch((error) => [null, error])
+}
+
+function inputChecker() {
+  if (!fs.existsSync('./input.json')) {
+    console.log('請修改 input.json');
+    return false
+  }
+  const contents = fs.readFileSync('./input.json'),
+    inputJSON = JSON.parse(contents);
+
+  const keyword = inputJSON.keyword;
+  const likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500;
+  const maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0;
+  const currentSESSID = inputJSON.SESSID;
+
+  if (!keyword) {
+    console.log('請在 input.json 檔裡輸入關鍵字');
+    console.log('');
+    return false
+  }
+  if (!currentSESSID) {
+    console.log('請在 input.json 檔裡輸入SESSID');
+    console.log('');
+    return false
+  }
+
+  return {
+    keyword,
+    likedLevel,
+    maxPage,
+    currentSESSID
+  }
 }
 
 async function firstSearch(keyword) {
@@ -298,7 +320,13 @@ function separateSingleAndMultiple(list) {
 }
 
 function fetchSingleImagesUrl(list) {
-  return list.map(({id, userId, illustTitle, userName, urls}) => {
+  return list.map(({
+    id,
+    userId,
+    illustTitle,
+    userName,
+    urls
+  }) => {
     const key = `${id}-${userId}`
     const name = `${illustTitle}_${id}_${userName}_${userId}`
     const original = urls.original
@@ -327,15 +355,24 @@ async function fetchMultipleImagesUrl(list) {
   const getMultiOriTask = new TaskSystem(taskArray, taskNumberCreater())
   const getMultiOriTaskResult = await getMultiOriTask.doPromise()
 
-  const multiMap = list.reduce((map, item) => Object.assign(map, { [item.illustId]: item }), {})
+  const multiMap = list.reduce((map, item) => Object.assign(map, {
+    [item.illustId]: item
+  }), {})
 
   let multiArray = []
   getMultiOriTaskResult.forEach((result) => {
     const resultItem = result.data
     const illustId = resultItem.illustId
 
-    const { id, userId, illustTitle, userName } = multiMap[illustId]
-    const multiImages = resultItem.data.map(({ urls }) => {
+    const {
+      id,
+      userId,
+      illustTitle,
+      userName
+    } = multiMap[illustId]
+    const multiImages = resultItem.data.map(({
+      urls
+    }) => {
       const original = urls.original
       const index = original.split(original.split(/_p\d\./)[0])[1].split('.')[0]
 
@@ -367,7 +404,10 @@ async function fetchMultipleImagesUrl(list) {
         url: `https://www.pixiv.net/ajax/illust/${illustId}/pages`,
         headers: getSearchHeader()
       }).then(([data]) => {
-        return Object.assign({illustId, data: data.body})
+        return Object.assign({
+          illustId,
+          data: data.body
+        })
       })
     }
   }
