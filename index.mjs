@@ -152,23 +152,12 @@ if (!fs.existsSync('./log/')) {
   const multipleArray_format = await fetchMultipleImagesUrl(multipleArray)
   const totalImageArray = singleArray_format.concat(multipleArray_format)
 
+  // 開始下載
   await startDownloadTask(totalImageArray, keyword)
 
   fs.writeFileSync('result.json', JSON.stringify(totalImageArray, null, 2))
-  return
 
-  var totalCount = 0,
-    successCount = 0,
-    failedCount = 0;
-
-  // 還要加上單一圖片和多重圖片的各別數字
-  console.log('');
-  console.log('==============================');
-  console.log(`關鍵字: ${ keyword }`);
-  console.log(`愛心數: > ${ likedLevel }`);
-  console.log(`總筆數: ${ totalCount }`);
-  console.log(`總成功數: ${ successCount }`);
-  console.log(`總失敗數: ${ failedCount }`);
+  console.log('下載完成!');
 
 })({
   eachPageInterval
@@ -419,7 +408,11 @@ async function fetchMultipleImagesUrl(list) {
 }
 
 async function startDownloadTask(sourceArray, keyword) {
-  const keywordFolder = `./${keyword}/`
+  if (!fs.existsSync('./images/')) {
+    fs.mkdirSync('./images/')
+  }
+
+  const keywordFolder = `./images/${keyword}/`
   if (!fs.existsSync(keywordFolder)) {
     fs.mkdirSync(keywordFolder)
   }
@@ -431,16 +424,16 @@ async function startDownloadTask(sourceArray, keyword) {
 
   const taskArray = []
   for (let i = 0; i < sourceArray.length; i++) {
-    taskArray.push(_create_download_task(sourceArray[i], keyword))
+    taskArray.push(_create_download_task(sourceArray[i], keywordFolder))
   }
   const downloadTask = new TaskSystem(taskArray, taskNumberCreater(), defaultTaskSetting())
   const downloadTaskResult = await downloadTask.doPromise()
 
   console.log(existFolderMap);
 
-  function _create_download_task(image, keyword) {
+  function _create_download_task(image, keywordFolder) {
     return function() {
-      const folder = `./${keyword}/${image.folder}`
+      const folder = `${keywordFolder}${image.folder}`
       switch (true) {
         case existFolderMap[folder]:
         case fs.existsSync(folder):
