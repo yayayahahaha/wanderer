@@ -250,6 +250,11 @@ async function bindingBookmarkCount(allPagesImagesArray, keyword) {
     })
   })
 
+  // cache 部分
+  const cacheFilePath = `./caches/${keyword}.json`
+  Object.assign(cachedMap, resultMap)
+  fs.writeFileSync(cacheFilePath, JSON.stringify(cachedMap, null, 2))
+
   return allPagesImagesMap
 
   function _each_image_page(illustId) {
