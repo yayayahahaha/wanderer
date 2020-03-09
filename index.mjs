@@ -72,9 +72,7 @@ const getSearchHeader = function() {
   };
 
 // 故事從這裡開始
-(async ({
-  eachPageInterval
-}) => {
+(async () => {
   // 確認input 資料
   const inputChecked = inputChecker()
   if (!inputChecked) return
@@ -120,9 +118,7 @@ const getSearchHeader = function() {
 
   console.log('下載完成!');
 
-})({
-  eachPageInterval
-});
+})();
 
 function request(config) {
   return axios(config).then(({
