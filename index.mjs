@@ -87,8 +87,10 @@ const getSearchHeader = function() {
   currentSESSID = ssid // TODO: avoid using global variable
 
   // 取得該搜尋關鍵字的基本資訊
+  console.log(`搜尋的關鍵字: ${keyword}`);
+  console.log('');
   const keywordInfo = await firstSearch(keyword)
-  if (!keywordInfo ) return
+  if (!keywordInfo) return
 
   const totalPages = Math.ceil(keywordInfo.total / eachPageInterval)
   console.log(`共有 ${keywordInfo.total} 筆， ${totalPages} 頁`);
@@ -96,8 +98,11 @@ const getSearchHeader = function() {
   let allPagesImagesArray = await getRestPages(keyword, totalPages)
   allPagesImagesArray = [keywordInfo].concat(allPagesImagesArray)
 
+  // 扁平化
+  allPagesImagesArray = allPagesImagesArray.reduce((array, pageInfo) => array.concat(pageInfo.data), [])
+
   // 綁定bookmarkCount 和likedCount
-  const formatedImagesArray = await bindingBookmarkCount(allPagesImagesArray);
+  const formatedImagesArray = await bindingBookmarkCount(allPagesImagesArray, keyword);
 
   // 過濾星星數: bookmarkCount + likedCount
   const filterImagesArray = filterBookmarkCount(formatedImagesArray, likedLevel)
@@ -199,16 +204,33 @@ async function getRestPages(keyword, totalPages) {
   }
 }
 
+// 取得每個作品的連結的快取
+function getPageCache(list, keyword) {
+  if (!fs.existsSync('./caches/')) {
+    fs.mkdirSync('./caches/')
+  }
+
+  let cacheMap = {}
+  const cacheFilePath = `./caches/${keyword}.json`
+  if (fs.existsSync(cacheFilePath)) {
+    cacheMap = JSON.parse(fs.readFileSync(cacheFilePath))
+  }
+  return cacheMap
+}
+
 // 透過taskSystem 逐頁取得所有圖片的項目
 // 也在這個function 找出每個圖片的星星數目
-async function bindingBookmarkCount(allPagesImagesArray) {
-  const flattenArray = allPagesImagesArray.reduce((array, pageInfo) => array.concat(pageInfo.data), [])
-  const allPagesImagesMap = flattenArray.reduce((map, item) => Object.assign(map, {
+async function bindingBookmarkCount(allPagesImagesArray, keyword) {
+  // 取得cache
+  const cachedMap = getPageCache(allPagesImagesArray, keyword)
+  const noCacheImages = allPagesImagesArray.filter((image) => !cachedMap[image.illustId])
+
+  const allPagesImagesMap = noCacheImages.reduce((map, item) => Object.assign(map, {
     [item.illustId]: item
   }), {})
 
   const taskArray = []
-  flattenArray.forEach((imageItem) => {
+  noCacheImages.forEach((imageItem) => {
     taskArray.push(_each_image_page(imageItem.illustId))
   })
   const taskNumber = taskNumberCreater(),
