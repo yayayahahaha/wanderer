@@ -221,13 +221,15 @@ function getPageCache(list, keyword) {
 // 透過taskSystem 逐頁取得所有圖片的項目
 // 也在這個function 找出每個圖片的星星數目
 async function bindingBookmarkCount(allPagesImagesArray, keyword) {
+  const allPagesImagesMap = allPagesImagesArray.reduce((map, item) => Object.assign(map, {
+    [item.illustId]: item
+  }), {})
+
   // 取得cache
   const cachedMap = getPageCache(allPagesImagesArray, keyword)
   const noCacheImages = allPagesImagesArray.filter((image) => !cachedMap[image.illustId])
 
-  const allPagesImagesMap = noCacheImages.reduce((map, item) => Object.assign(map, {
-    [item.illustId]: item
-  }), {})
+
 
   const taskArray = []
   noCacheImages.forEach((imageItem) => {
@@ -239,21 +241,22 @@ async function bindingBookmarkCount(allPagesImagesArray, keyword) {
 
   const resultMap = {}
   bookmarkTaskResult.forEach((result) => Object.assign(resultMap, result.data.illust))
+
+  // cache 部分
+  const cacheFilePath = `./caches/${keyword}.json`
+  Object.assign(cachedMap, resultMap)
+  fs.writeFileSync(cacheFilePath, JSON.stringify(cachedMap, null, 2))
+
   Object.keys(allPagesImagesMap).forEach((illustId) => {
-    const urls = resultMap[illustId].urls
-    const bookmarkCount = resultMap[illustId].bookmarkCount
-    const likeCount = resultMap[illustId].likeCount
+    const urls = cachedMap[illustId].urls
+    const bookmarkCount = cachedMap[illustId].bookmarkCount
+    const likeCount = cachedMap[illustId].likeCount
     Object.assign(allPagesImagesMap[illustId], {
       urls,
       bookmarkCount,
       likeCount
     })
   })
-
-  // cache 部分
-  const cacheFilePath = `./caches/${keyword}.json`
-  Object.assign(cachedMap, resultMap)
-  fs.writeFileSync(cacheFilePath, JSON.stringify(cachedMap, null, 2))
 
   return allPagesImagesMap
 
