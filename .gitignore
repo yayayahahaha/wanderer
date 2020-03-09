@@ -3,7 +3,7 @@
 **.jpeg
 **.gif
 node_modules/
-cache/
+caches/
 log/
 cacheDirectory.json
 result.json
