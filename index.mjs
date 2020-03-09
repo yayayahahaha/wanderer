@@ -72,7 +72,7 @@ const getSearchHeader = function() {
   };
 
 // 故事從這裡開始
-(async () => {
+(async (eachPageInterval = 60) => {
   // 確認input 資料
   const inputChecked = inputChecker()
   if (!inputChecked) return
@@ -88,6 +88,8 @@ const getSearchHeader = function() {
 
   // 取得該搜尋關鍵字的基本資訊
   const keywordInfo = await firstSearch(keyword)
+  if (!keywordInfo ) return
+
   const totalPages = Math.ceil(keywordInfo.total / eachPageInterval)
   console.log(`共有 ${keywordInfo.total} 筆， ${totalPages} 頁`);
 
@@ -166,7 +168,7 @@ async function firstSearch(keyword) {
   })
   if (error) {
     console.erro('取得資料失敗!');
-    return
+    return false
   }
   return firstPageData.body.illustManga
 }
