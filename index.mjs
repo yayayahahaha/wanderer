@@ -160,6 +160,7 @@ function inputChecker() {
   }
 }
 
+// 第一次搜尋: 主要是取得總頁數
 async function firstSearch(keyword) {
   const [firstPageData, error] = await request({
     method: 'get',
@@ -173,6 +174,7 @@ async function firstSearch(keyword) {
   return firstPageData.body.illustManga
 }
 
+// 取得其他所有頁數的資料，不包含以查找過的第一頁
 async function getRestPages(keyword, totalPages) {
   const searchFuncArray = []
   for (let i = 1; i <= totalPages; i++) {
@@ -197,6 +199,8 @@ async function getRestPages(keyword, totalPages) {
   }
 }
 
+// 透過taskSystem 逐頁取得所有圖片的項目
+// 也在這個function 找出每個圖片的星星數目
 async function bindingBookmarkCount(allPagesImagesArray) {
   const flattenArray = allPagesImagesArray.reduce((array, pageInfo) => array.concat(pageInfo.data), [])
   const allPagesImagesMap = flattenArray.reduce((map, item) => Object.assign(map, {
@@ -242,6 +246,7 @@ async function bindingBookmarkCount(allPagesImagesArray) {
   }
 }
 
+// 過濾星星: 把bookmarkCount + likeCount 少於目標數的剔除
 function filterBookmarkCount(map, level = 0) {
   const list = Object.keys(map).map((id) => map[id])
   return list.filter((item) => {
@@ -250,6 +255,7 @@ function filterBookmarkCount(map, level = 0) {
   })
 }
 
+// 區分出單張和組圖
 function separateSingleAndMultiple(list) {
   return list.reduce((object, item) => {
     switch (item.pageCount) {
@@ -267,6 +273,8 @@ function separateSingleAndMultiple(list) {
   })
 }
 
+// fetchSingleImageUrl & fetchMultipleImageUrl:
+// 用來取得圖片的真實路徑並整理好格式
 function fetchSingleImagesUrl(list) {
   return list.map(({
     id,
@@ -365,6 +373,7 @@ async function fetchMultipleImagesUrl(list) {
   }
 }
 
+// 開始下載
 async function startDownloadTask(sourceArray, keyword) {
   if (!fs.existsSync('./images/')) {
     fs.mkdirSync('./images/')
