@@ -81,7 +81,7 @@ const defaultTaskSetting = function() {
   const {
     keyword,
     likedLevel,
-    maxPage,
+    // maxPage, 暫時沒有用到
     currentSESSID: ssid
   } = inputChecked
   currentSESSID = ssid // TODO: avoid using global variable
@@ -124,7 +124,7 @@ const defaultTaskSetting = function() {
   fs.writeFileSync('result.json', JSON.stringify(totalImageArray, null, 2))
 
   console.log('下載完成!')
-})()
+})(eachPageInterval)
 
 function request(config) {
   return axios(config).then(({
@@ -185,8 +185,8 @@ async function getRestPages(keyword, totalPages) {
     if (i === 1) continue
     searchFuncArray.push(_create_each_search_page(keyword, i))
   }
-  const taskNumber = taskNumberCreater()
-  const task_search = new TaskSystem(searchFuncArray, 40, defaultTaskSetting())
+  const taskNumber = 40
+  const task_search = new TaskSystem(searchFuncArray, taskNumber, defaultTaskSetting())
 
   let allPagesImagesArray = await task_search.doPromise()
   allPagesImagesArray = allPagesImagesArray.map((result) => result.data[0].body.illustManga)
@@ -421,6 +421,8 @@ async function startDownloadTask(sourceArray, keyword) {
   }
   const downloadTask = new TaskSystem(taskArray, taskNumberCreater(), defaultTaskSetting())
   const downloadTaskResult = await downloadTask.doPromise()
+
+  return downloadTaskResult
 
   function _create_download_task(image, keywordFolder) {
     return function() {
