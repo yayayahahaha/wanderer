@@ -11,6 +11,10 @@
 // 依作者分類
 // 計算作者總星星數和取出基本資訊
 // 作者排序
+// 攤平瀏覽
+// 查詢結果如果過多的話該怎麼辦?
+// electron 平台的實作
+// Puppeteer 操偶師的實作必要性研究
 
 import axios from 'axios'
 import fs from 'fs'
