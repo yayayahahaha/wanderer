@@ -172,7 +172,7 @@ async function firstSearch(keyword) {
     headers: getSearchHeader()
   })
   if (error) {
-    console.erro('取得資料失敗!')
+    console.error('取得資料失敗!')
     return false
   }
   return firstPageData.body.illustManga
