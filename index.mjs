@@ -12,67 +12,67 @@
 // 計算作者總星星數和取出基本資訊
 // 作者排序
 
-import axios from 'axios';
+import axios from 'axios'
 import fs from 'fs'
-import os from 'os';
-import flyc from 'npm-flyc';
+import os from 'os'
+import flyc from 'npm-flyc'
 
 const {
   TaskSystem,
   download
-} = flyc; // nodejs 的import 似乎無法直接解構?
+} = flyc // nodejs 的import 似乎無法直接解構?
 // TODO
 // SESSID 的部分可以嘗試打post api 傳遞帳密後直接取得之類的
 // 或是取得多組SESSID 後放進array 做輪詢減少單一帳號的loading 之類的
-let currentSESSID = '';
+let currentSESSID = ''
 
-let eachPageInterval = 60;
+const eachPageInterval = 60
 
 const getSearchHeader = function() {
-    if (!currentSESSID) console.log('getSearchHeader: currentSESSID 為空！');
-    return {
-      'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5',
-      cookie: `PHPSESSID=${currentSESSID};`
-    };
-  },
-  getSinegleHeader = function(illustId) {
-    if (!illustId) {
-      console.log('getSinegleHeader: 請務必輸入illustId');
-      return {};
+  if (!currentSESSID) console.log('getSearchHeader: currentSESSID 為空！')
+  return {
+    'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,zh-CN;q=0.5',
+    cookie: `PHPSESSID=${currentSESSID};`
+  }
+}
+const getSinegleHeader = function(illustId) {
+  if (!illustId) {
+    console.log('getSinegleHeader: 請務必輸入illustId')
+    return {}
+  }
+  return {
+    referer: `https://www.pixiv.net/artworks/${illustId}`
+  }
+}
+const getKeywordsInfoUrl = function(keyword, page = 1) {
+  const url = `https://www.pixiv.net/ajax/search/artworks/${keyword}?word=${keyword}&order=date&mode=all&p=${page}&s_mode=s_tag&type=all`
+  return encodeURI(url)
+}
+const taskNumberCreater = function() {
+  const cpus = os.cpus()
+  const cpusAmount = cpus.length
+  const cpuSpec = cpus.reduce(function(cardinalNumber, cpu) {
+    let total = 0
+    for (const item in cpu.times) {
+      total += cpu.times[item]
     }
-    return {
-      referer: `https://www.pixiv.net/artworks/${illustId}`
-    };
-  },
-  getKeywordsInfoUrl = function(keyword, page = 1) {
-    const url = `https://www.pixiv.net/ajax/search/artworks/${keyword}?word=${keyword}&order=date&mode=all&p=${page}&s_mode=s_tag&type=all`
-    return encodeURI(url);
-  },
-  taskNumberCreater = function() {
-    const cpus = os.cpus(),
-      cpusAmount = cpus.length,
-      cpuSpec = cpus.reduce(function(cardinalNumber, cpu) {
-        let total = 0;
-        for (let item in cpu.times) {
-          total += cpu.times[item];
-        }
-        return cardinalNumber + (cpu.times.idle * 100 / total);
-      }, 0) / cpusAmount;
+    return cardinalNumber + (cpu.times.idle * 100 / total)
+  }, 0) / cpusAmount
 
-    const memory = os.freemem() / Math.pow(1024, 3); // GB
+  const memory = os.freemem() / Math.pow(1024, 3) // GB
 
-    const taskNumber = memory * cpuSpec / 10;
+  const taskNumber = memory * cpuSpec / 10
 
-    return Math.round(taskNumber);
-  },
-  defaultTaskSetting = function() {
-    return {
-      randomDelay: 0
-    }
-  };
+  return Math.round(taskNumber)
+}
+const defaultTaskSetting = function() {
+  return {
+    randomDelay: 0
+  }
+};
 
 // 故事從這裡開始
-(async (eachPageInterval = 60) => {
+(async(eachPageInterval = 60) => {
   // 確認input 資料
   const inputChecked = inputChecker()
   if (!inputChecked) return
@@ -81,19 +81,19 @@ const getSearchHeader = function() {
   const {
     keyword,
     likedLevel,
-    maxPage,
+    // maxPage, 暫時沒有用到
     currentSESSID: ssid
   } = inputChecked
   currentSESSID = ssid // TODO: avoid using global variable
 
   // 取得該搜尋關鍵字的基本資訊
-  console.log(`搜尋的關鍵字: ${keyword}`);
-  console.log('');
+  console.log(`搜尋的關鍵字: ${keyword}`)
+  console.log('')
   const keywordInfo = await firstSearch(keyword)
   if (!keywordInfo) return
 
   const totalPages = Math.ceil(keywordInfo.total / eachPageInterval)
-  console.log(`共有 ${keywordInfo.total} 筆， ${totalPages} 頁`);
+  console.log(`共有 ${keywordInfo.total} 筆， ${totalPages} 頁`)
 
   let allPagesImagesArray = await getRestPages(keyword, totalPages)
   allPagesImagesArray = [keywordInfo].concat(allPagesImagesArray)
@@ -102,7 +102,7 @@ const getSearchHeader = function() {
   allPagesImagesArray = allPagesImagesArray.reduce((array, pageInfo) => array.concat(pageInfo.data), [])
 
   // 綁定bookmarkCount 和likedCount
-  const formatedImagesArray = await bindingBookmarkCount(allPagesImagesArray, keyword);
+  const formatedImagesArray = await bindingBookmarkCount(allPagesImagesArray, keyword)
 
   // 過濾星星數: bookmarkCount + likedCount
   const filterImagesArray = filterBookmarkCount(formatedImagesArray, likedLevel)
@@ -123,9 +123,8 @@ const getSearchHeader = function() {
 
   fs.writeFileSync('result.json', JSON.stringify(totalImageArray, null, 2))
 
-  console.log('下載完成!');
-
-})();
+  console.log('下載完成!')
+})(eachPageInterval)
 
 function request(config) {
   return axios(config).then(({
@@ -135,25 +134,25 @@ function request(config) {
 
 function inputChecker() {
   if (!fs.existsSync('./input.json')) {
-    console.log('請修改 input.json');
+    console.log('請修改 input.json')
     return false
   }
-  const contents = fs.readFileSync('./input.json'),
-    inputJSON = JSON.parse(contents);
+  const contents = fs.readFileSync('./input.json')
+  const inputJSON = JSON.parse(contents)
 
-  const keyword = inputJSON.keyword;
-  const likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500;
-  const maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0;
-  const currentSESSID = inputJSON.SESSID;
+  const keyword = inputJSON.keyword
+  const likedLevel = typeof inputJSON.likedLevel === 'number' ? inputJSON.likedLevel : 500
+  const maxPage = typeof inputJSON.maxPage === 'number' ? inputJSON.maxPage : 0
+  const currentSESSID = inputJSON.SESSID
 
   if (!keyword) {
-    console.log('請在 input.json 檔裡輸入關鍵字');
-    console.log('');
+    console.log('請在 input.json 檔裡輸入關鍵字')
+    console.log('')
     return false
   }
   if (!currentSESSID) {
-    console.log('請在 input.json 檔裡輸入SESSID');
-    console.log('');
+    console.log('請在 input.json 檔裡輸入SESSID')
+    console.log('')
     return false
   }
 
@@ -173,7 +172,7 @@ async function firstSearch(keyword) {
     headers: getSearchHeader()
   })
   if (error) {
-    console.erro('取得資料失敗!');
+    console.error('取得資料失敗!')
     return false
   }
   return firstPageData.body.illustManga
@@ -186,10 +185,10 @@ async function getRestPages(keyword, totalPages) {
     if (i === 1) continue
     searchFuncArray.push(_create_each_search_page(keyword, i))
   }
-  const taskNumber = taskNumberCreater(),
-    task_search = new TaskSystem(searchFuncArray, 40, defaultTaskSetting());
+  const taskNumber = 40
+  const task_search = new TaskSystem(searchFuncArray, taskNumber, defaultTaskSetting())
 
-  let allPagesImagesArray = await task_search.doPromise();
+  let allPagesImagesArray = await task_search.doPromise()
   allPagesImagesArray = allPagesImagesArray.map((result) => result.data[0].body.illustManga)
   return allPagesImagesArray
 
@@ -229,15 +228,13 @@ async function bindingBookmarkCount(allPagesImagesArray, keyword) {
   const cachedMap = getPageCache(allPagesImagesArray, keyword)
   const noCacheImages = allPagesImagesArray.filter((image) => !cachedMap[image.illustId])
 
-
-
   const taskArray = []
   noCacheImages.forEach((imageItem) => {
     taskArray.push(_each_image_page(imageItem.illustId))
   })
-  const taskNumber = taskNumberCreater(),
-    bookmarkTask = new TaskSystem(taskArray, taskNumber, defaultTaskSetting()),
-    bookmarkTaskResult = await bookmarkTask.doPromise();
+  const taskNumber = taskNumberCreater()
+  const bookmarkTask = new TaskSystem(taskArray, taskNumber, defaultTaskSetting())
+  const bookmarkTaskResult = await bookmarkTask.doPromise()
 
   const resultMap = {}
   bookmarkTaskResult.forEach((result) => Object.assign(resultMap, result.data.illust))
@@ -267,9 +264,9 @@ async function bindingBookmarkCount(allPagesImagesArray, keyword) {
         url: `https://www.pixiv.net/artworks/${illustId}`,
         headers: getSearchHeader()
       }).then(([data]) => {
-        const splitPattern1 = `<meta name="preload-data" id="meta-preload-data" content='`
-        const splitPattern2 = `</head>`
-        const splitPattern3 = `'>`
+        const splitPattern1 = '<meta name="preload-data" id="meta-preload-data" content=\''
+        const splitPattern2 = '</head>'
+        const splitPattern3 = '\'>'
         return JSON.parse(data.split(splitPattern1)[1].split(splitPattern2)[0].split(splitPattern3)[0])
       })
     }
@@ -331,7 +328,6 @@ function fetchSingleImagesUrl(list) {
       original,
       type
     }
-
   })
 }
 async function fetchMultipleImagesUrl(list) {
@@ -426,16 +422,18 @@ async function startDownloadTask(sourceArray, keyword) {
   const downloadTask = new TaskSystem(taskArray, taskNumberCreater(), defaultTaskSetting())
   const downloadTaskResult = await downloadTask.doPromise()
 
+  return downloadTaskResult
+
   function _create_download_task(image, keywordFolder) {
     return function() {
       const folder = `${keywordFolder}${image.folder}`
       switch (true) {
         case existFolderMap[folder]:
         case fs.existsSync(folder):
-          break;
+          break
         default:
           fs.mkdirSync(folder)
-          break;
+          break
       }
       existFolderMap[folder] = true
 
